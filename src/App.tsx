@@ -232,11 +232,11 @@ const content: Record<Lang, {
           tech: { users: '05+', modules: '06', integrations: '02' }
         },
         {
-          title: 'Customer Relationship Management: CRM',
-          body: 'Centralized commercial intelligence system designed to manage client relationships, sales pipelines and revenue performance in real time.',
+          title: 'CUSTOMER RELATIONSHIP MANAGEMENT: CRM',
+          body: 'Sistema de inteligencia comercial centralizado diseñado para gestionar relaciones con clientes, embudos de ventas y rendimiento de ingresos en tiempo real.',
           status: 'DEVELOPMENT',
-          metrics: ['SALES PIPELINE CONTROL','LEAD TRACKING','AUTOMATED FOLLOW-UPS'],
-          phase: 'Architecture modeling',
+          metrics: ['CONTROL DE EMBUDO DE VENTAS','SEGUIMIENTO DE LEADS','SEGUIMIENTO AUTOMATIZADO'],
+          phase: 'Modelado de arquitectura',
           tech: { users: '20+', modules: '08', integrations: '06' }
         },
         {
@@ -250,7 +250,7 @@ const content: Record<Lang, {
       ],
     },
     faq: {
-      title: 'FAQ',
+      title: 'BRIEF DE DECISIÓN',
       subtitle: 'Respuestas directas para tomar decision rapido.',
       items: [
         {
@@ -457,7 +457,7 @@ const content: Record<Lang, {
           tech: { users: '05+', modules: '06', integrations: '02' }
         },
         {
-          title: 'Customer Relationship Management: CRM',
+          title: 'CUSTOMER RELATIONSHIP MANAGEMENT: CRM',
           body: 'Centralized commercial intelligence system designed to manage client relationships, sales pipelines and revenue performance in real time.',
           status: 'DEVELOPMENT',
           metrics: ['SALES PIPELINE CONTROL','LEAD TRACKING','AUTOMATED FOLLOW-UPS'],
@@ -475,7 +475,7 @@ const content: Record<Lang, {
       ],
     },
     faq: {
-      title: 'FAQ',
+      title: 'DECISION BRIEF',
       subtitle: 'Direct answers for decisive teams.',
       items: [
         {
@@ -789,7 +789,7 @@ function App() {
         <section id="manifesto" className="section" aria-label="Manifesto">
           <div className="container">
             <div className="section-title">
-              <h2 className="h-title" style={{ color: '#8E2DE2' }}>{t.manifesto.title}</h2>
+              <h2 className="h-title" style={{ color: '#fff' }}>{t.manifesto.title}</h2>
             </div>
             <div className="card manifesto-card">
               {t.manifesto.lines.map((line: string) => (
@@ -1022,10 +1022,10 @@ function App() {
           </div>
         </section>
 
-        <section id="faq" className="section section-brief" aria-label="Decision Brief">
+        <section id="faq" className="section section-brief" aria-label={t.faq.title}>
           <div className="container">
             <div className="section-title">
-              <h2 className="h-title">DECISION BRIEF</h2>
+              <h2 className="h-title">{t.faq.title}</h2>
               <p>{t.faq.subtitle}</p>
             </div>
             <div style={{ height: 48 }} />
@@ -1056,8 +1056,8 @@ function App() {
 
         <section id="contact" className="section" aria-label="Contact">
           <div className="container grid grid-2">
-            <div>
-              <div className="section-title" style={{ justifyContent: 'flex-start', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <div className="section-title" style={{ justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
                 <h2 className="h-title" style={{ marginBottom: 6 }}>
                   {t.contact.title}
                 </h2>
@@ -1175,9 +1175,6 @@ function App() {
                 <button type="submit" className="btn btn-primary" disabled={status === 'loading'}>
                   {status === 'loading' ? t.contact.submitting : t.contact.submit}
                 </button>
-                <a className="btn btn-secondary" href={WHATSAPP_LINK_ES} target="_blank" rel="noreferrer">
-                  {t.ctaSecondary}
-                </a>
                 <span className="note">{t.pricingLine}</span>
               </div>
 

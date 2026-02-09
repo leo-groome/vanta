@@ -48,6 +48,8 @@ This file guides agentic coding tools in this repo.
 - No semicolons in existing TS/TSX files; keep it consistent.
 - Trailing commas are used in objects/arrays when multiline.
 - Keep lines readable; wrap JSX props when they grow.
+- Mobile UI: Use horizontal carousel for Active Systems with 88% panel width and centered snap.
+- Forms: Select options must have dark background and light text for contrast in mobile browsers.
 
 ## Imports
 - Order: React/JS built-ins, third-party, local modules, styles.

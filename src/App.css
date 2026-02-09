@@ -1270,7 +1270,7 @@
   font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 13px;
   font-weight: 700;
-  color: #1F6BFF;
+  color: #8E2DE2;
   letter-spacing: 2px;
   line-height: 1.4;
 }
@@ -1304,13 +1304,80 @@
 }
 
 @media (max-width: 920px) {
-  .brief-item {
+  .section {
+    padding: 72px 0;
+  }
+
+  .grid-3 {
     grid-template-columns: 1fr;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .systems-carousel {
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 16px;
+    padding: 10px 0 32px;
+  }
+
+  .system-panel {
+    flex: 0 0 88%;
+    scroll-snap-align: center;
+    border-radius: 16px;
+  }
+
+  .system-header {
+    padding: 24px;
+    gap: 16px;
+  }
+
+  .system-icon-box {
+    width: 40px;
+    height: 40px;
+  }
+
+  .system-header .value {
+    font-size: 16px;
+  }
+
+  .system-body {
+    padding: 24px;
     gap: 24px;
-    padding: 32px 0;
+  }
+
+  .system-description {
+    font-size: 14px;
+  }
+
+  .system-tech-grid {
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+  }
+
+  .tech-item {
+    padding: 12px 10px;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .tech-val {
+    font-size: 14px;
+  }
+
+  .system-tag {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .systems-nav {
+    display: flex;
+    margin-top: 0;
   }
 }
-
 
 .form {
   padding: 48px;
@@ -1354,6 +1421,11 @@
   transition: all 0.3s ease;
 }
 
+.form-group select option {
+  background: var(--bg-1);
+  color: var(--text);
+}
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
@@ -1371,14 +1443,13 @@
 .form-actions {
   margin-top: 32px;
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 20px;
   align-items: center;
 }
 
 .form-actions .btn-primary {
-  width: auto;
+  width: 100%;
   min-width: 200px;
 }
 
@@ -1489,6 +1560,21 @@
   .mod-header {
     justify-content: center;
     text-align: center;
+  }
+  .brief-item {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 32px 0;
+    text-align: center;
+  }
+  .brief-content {
+    align-items: center;
+  }
+  .brief-explanation {
+    margin: 0 auto;
+  }
+  .brief-result {
+    justify-content: center;
   }
 }
 
