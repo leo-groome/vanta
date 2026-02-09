@@ -61,6 +61,8 @@ This file guides agentic coding tools in this repo.
 - Event handlers use `onX` prefix (e.g., `onSubmit`).
 - Constants use `UPPER_SNAKE_CASE` when globally scoped.
 - Content map keys use lower camel case (`ctaPrimary`, `hero`).
+- Specific sections include `strategy` (strategic modules) and `cases` (active systems).
+- `cases.items` include `tech` metrics (users, modules, integrations) and `status` literals.
 - CSS classes use kebab-case (`hero-grid`, `card-pad`).
 - Boolean flags use `is/has/should` prefixes where possible.
 
