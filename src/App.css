@@ -213,7 +213,7 @@
   height: 220px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(31, 107, 255, 0.2);
-  background: url('src/assets/Banner Vanta.svg') center/cover no-repeat;
+  background: url('src/assets/BannerVanta.svg') center/cover no-repeat;
   opacity: 0.9;
   filter: grayscale(0.2) contrast(1.1);
 }

@@ -1,5 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from 'react'
-import emailjs from '@emailjs/browser'
+import { useState, useRef, useEffect } from 'react'
 import logo from './assets/logo.svg'
 import './App.css'
 
@@ -17,7 +16,7 @@ type FormState = {
 }
 
 const WHATSAPP_LINK_ES =
-  'https://wa.me/524495411077?text=Hola,%20soy%20___%20de%20___%20(industria:%20___).%20Quiero%20un%20diagnostico%20para%20saber%20si%20mi%20negocio%20es%20rentable%20y%20c%C3%B3mo%20mejorarlo.'
+  'https://wa.me/524494401613?text=Hola,%20soy%20___%20de%20___%20(industria:%20___).%20Quiero%20un%20diagnostico%20para%20saber%20si%20mi%20negocio%20es%20rentable%20y%20c%C3%B3mo%20mejorarlo.'
 
 const SIGNATURE = '— Vanta Solutions | Ingenieria de elite'
 
@@ -602,15 +601,6 @@ function App() {
 
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
-  const env = useMemo(() => {
-    return {
-      serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID as string | undefined,
-      publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY as string | undefined,
-      leadTemplateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID_LEAD as string | undefined,
-      autoTemplateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID_AUTOREPLY as string | undefined,
-    }
-  }, [])
-
   function onLang(next: Lang) {
     setLang(next)
     localStorage.setItem('lang', next)
@@ -622,11 +612,6 @@ function App() {
 
     if (form.website.trim().length > 0) return
 
-    if (!env.serviceId || !env.publicKey || !env.leadTemplateId || !env.autoTemplateId) {
-      setStatus('error')
-      return
-    }
-
     if (!form.name || !form.company || !form.whatsapp || !form.email || !form.industry || !form.goal) {
       setStatus('error')
       return
@@ -634,50 +619,21 @@ function App() {
 
     setStatus('loading')
 
-    const timestamp = new Date().toISOString()
-
-    const baseParams = {
-      from_name: 'VANTA SOLUTIONS',
-      name: form.name,
-      company: form.company,
-      whatsapp: form.whatsapp,
-      email: form.email,
-      industry: form.industry,
-      goal: form.goal,
-      message: form.message,
-      lang,
-      timestamp,
-      signature: SIGNATURE,
-    }
-
     try {
-      await emailjs.send(
-        env.serviceId,
-        env.leadTemplateId,
-        {
-          ...baseParams,
-          subject: 'New request StrategicDiagnostic',
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          publicKey: env.publicKey,
-        },
-      )
+        body: JSON.stringify({
+          ...form,
+          lang,
+        }),
+      })
 
-      await emailjs.send(
-        env.serviceId,
-        env.autoTemplateId,
-        {
-          ...baseParams,
-          subject: lang === 'es' ? 'Recibimos tu solicitud' : 'We received your request',
-          reply_body:
-            lang === 'es'
-              ? `Recibimos tu solicitud de diagnostico estrategico. Te contactamos por WhatsApp.\n\n${SIGNATURE}`
-              : `We received your strategic diagnostic request. We'll reach out via WhatsApp.\n\n${SIGNATURE}`,
-        },
-        {
-          publicKey: env.publicKey,
-        },
-      )
+      if (!response.ok) {
+        throw new Error('Failed to send')
+      }
 
       setStatus('success')
       setForm({
@@ -690,7 +646,8 @@ function App() {
         message: '',
         website: '',
       })
-    } catch {
+    } catch (error) {
+      console.error('Submission error:', error)
       setStatus('error')
     }
   }
