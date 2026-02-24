@@ -129,7 +129,7 @@ const DisorderedWords = ({ text }: { text: string }) => {
   );
 };
 
-const VisibilityWord = ({ word, forceReset }: { word: string; forceReset: boolean }) => {
+const VisibilityWord = ({ word, forceReset, globalReveal }: { word: string; forceReset: boolean; globalReveal: boolean }) => {
   const [isVisible, setIsVisible] = useState(false);
   const timerRef = useRef<any>(null);
 
@@ -140,19 +140,31 @@ const VisibilityWord = ({ word, forceReset }: { word: string; forceReset: boolea
     }
   }, [forceReset]);
 
+  useEffect(() => {
+    if (globalReveal && !isVisible) {
+      // Stagger the reveal for mobile tap
+      const delay = Math.random() * 400;
+      setTimeout(() => {
+        setIsVisible(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setIsVisible(false), 5000);
+      }, delay);
+    }
+  }, [globalReveal]);
+
   const handleReveal = () => {
     if (isVisible) return;
     setIsVisible(true);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       setIsVisible(false);
-    }, 8000);
+    }, 5000);
   };
 
   return (
     <span
       onMouseEnter={handleReveal}
-      className={`visibility-word text-lg font-bold transition-all duration-1000 cursor-default grayscale ${
+      className={`visibility-word text-lg font-bold transition-all duration-1000 cursor-pointer grayscale select-none ${
         isVisible ? 'opacity-100 blur-0 grayscale-0' : 'opacity-20 blur-[6px]'
       }`}
     >
@@ -163,10 +175,20 @@ const VisibilityWord = ({ word, forceReset }: { word: string; forceReset: boolea
 
 const VisibilityWords = ({ text, resetTrigger }: { text: string; resetTrigger: boolean }) => {
   const words = text.split(' ');
+  const [globalReveal, setGlobalReveal] = useState(false);
+
+  const handleTap = () => {
+    setGlobalReveal(true);
+    setTimeout(() => setGlobalReveal(false), 5000);
+  };
+
   return (
-    <div className="flex flex-wrap gap-x-2 gap-y-1 relative group/visibility py-2">
+    <div className="flex flex-wrap gap-x-2 gap-y-1 relative py-2 cursor-pointer" onClick={handleTap}>
+      <div className={`lg:hidden absolute -top-4 right-0 text-[8px] text-red-500/60 font-mono tracking-widest transition-opacity ${globalReveal ? 'opacity-0' : 'opacity-100 animate-pulse pointer-events-none'}`}>
+        TAP TO DECRYPT
+      </div>
       {words.map((word, i) => (
-        <VisibilityWord key={i} word={word} forceReset={resetTrigger} />
+        <VisibilityWord key={i} word={word} forceReset={resetTrigger} globalReveal={globalReveal} />
       ))}
     </div>
   );
@@ -211,8 +233,19 @@ const Counter = ({ value, duration = 1200, isVisible }: { value: string, duratio
 
 const StaticWords = ({ text }: { text: string }) => {
   const words = text.split(' ');
+  const [isActive, setIsActive] = useState(false);
+
   return (
-    <div className="mt-4 relative group/static overflow-hidden border border-white/10 rounded-sm bg-black/40 pt-1">
+    <div 
+      className="mt-4 relative overflow-hidden border border-white/10 rounded-sm bg-black/40 pt-1 cursor-pointer"
+      onMouseEnter={() => setIsActive(true)}
+      onMouseLeave={() => setIsActive(false)}
+      onClick={() => setIsActive(!isActive)}
+    >
+      <div className={`lg:hidden absolute -top-4 right-0 z-20 text-[8px] text-red-500/60 font-mono tracking-widest transition-opacity ${isActive ? 'opacity-0' : 'opacity-100 animate-pulse pointer-events-none'}`}>
+        TAP TO LOAD
+      </div>
+      
       {/* Excel Header row - Cleaned up */}
       <div className="flex border-b border-white/10 bg-white/5 text-[9px] font-mono text-gray-500">
         <div className="flex-1 px-2 py-0.5 border-r border-white/10">A</div>
@@ -230,10 +263,10 @@ const StaticWords = ({ text }: { text: string }) => {
               return (
                 <div key={col} className="flex-1 px-1 py-2 border-r border-white/5 last:border-0 truncate text-gray-400 relative h-8 flex items-center justify-center">
                   <span 
-                    className="static-word inline-block text-center opacity-0 group-hover/static:opacity-100 group-hover/static:translate-y-0 group-hover/static:translate-x-0 group-hover/static:animate-stale-jitter"
+                    className={`static-word inline-block text-center ${isActive ? 'opacity-100 animate-stale-jitter' : 'opacity-0'}`}
                     style={{ 
                       transition: `all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) ${wordIdx * 0.03}s`,
-                      transform: wordIdx % 2 === 0 ? 'translateY(10px)' : 'translateX(-10px)'
+                      transform: isActive ? 'translate(0, 0)' : (wordIdx % 2 === 0 ? 'translateY(10px)' : 'translateX(-10px)')
                     }}
                   >
                     {word}
@@ -246,7 +279,7 @@ const StaticWords = ({ text }: { text: string }) => {
       </div>
       
       {/* Outdated Label Overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-0 group-hover/static:opacity-100 flex items-center justify-center transition-opacity duration-300">
+      <div className={`absolute inset-0 pointer-events-none flex items-center justify-center transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0'}`}>
         <div className="bg-red-600/10 backdrop-blur-[0.5px] border border-red-500/30 px-3 py-1 text-[8px] text-red-500/70 font-bold rotate-12 tracking-[0.2em] uppercase">
           Static Report
         </div>
@@ -260,6 +293,7 @@ export default function App() {
   const [lang, setLang] = useState(i18n.language || 'es');
   const [revealManual, setRevealManual] = useState(false);
   const [resetVisibility, setResetVisibility] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const [form, setForm] = useState({
     name: '', company: '', whatsapp: '', email: '', industry: '', goal: '', message: '', website: ''
@@ -407,31 +441,68 @@ export default function App() {
 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] mix-blend-overlay"></div>
 </div>
 <nav className="fixed w-full z-50 top-0 backdrop-blur-xl bg-black/40 border-b border-white/5">
-<div className="w-full px-6 lg:px-12">
-<div className="flex items-center justify-between h-24">
+<div className="w-full px-4 sm:px-6 lg:px-12">
+<div className="flex items-center justify-between h-20 md:h-24">
 <div className="shrink-0 flex items-center gap-3 cursor-pointer group">
-<VantaLogo className="h-14 w-auto" />
+<VantaLogo className="h-10 md:h-14 w-auto" />
 </div>
-<div className="hidden md:block">
-<div className="ml-10 flex items-baseline space-x-12">
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#manifesto">{t('nav.manifesto')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#hero">{t('nav.hero')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#pain-points">{t('nav.pain_points')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#command">{t('nav.command')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#projects">Proyectos<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#contact">Contáctanos<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<div className="hidden lg:block">
+<div className="ml-10 flex items-baseline space-x-8 xl:space-x-12">
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#manifesto">{t('nav.manifesto')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#hero">{t('nav.hero')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#pain-points">{t('nav.pain_points')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#command">{t('nav.command')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#projects">Proyectos<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#contact">Contáctanos<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
 </div>
 </div>
-<div className="hidden md:flex items-center gap-6">
-<button onClick={toggleLang} className="bg-violet-600/10 hover:bg-violet-600/20 text-white px-4 py-2 rounded-full border border-violet-500/30 text-xs font-bold transition-all flex items-center justify-center min-w-[44px] shadow-lg shadow-violet-500/10 active:scale-95">
+<div className="hidden lg:flex items-center gap-4 xl:gap-6">
+<button onClick={toggleLang} className="bg-violet-600/10 hover:bg-violet-600/20 text-white px-3 py-1.5 xl:px-4 xl:py-2 rounded-full border border-violet-500/30 text-xs font-bold transition-all flex items-center justify-center min-w-[44px] shadow-lg shadow-violet-500/10 active:scale-95">
   {lang === 'es' ? 'EN' : 'ES'}
 </button>
-<a href="https://wa.me/524494401613?text=Hola%2C%20me%20interesa%20agendar%20una%20cita%20con%20Vanta%20Solutions" target="_blank" rel="noopener noreferrer" className="btn-premium-nav px-10 py-4 text-white rounded-full text-base font-bold shadow-2xl tracking-wide uppercase inline-flex items-center justify-center">
+<a href="https://wa.me/524494401613?text=Hola%2C%20me%20interesa%20agendar%20una%20cita%20con%20Vanta%20Solutions" target="_blank" rel="noopener noreferrer" className="btn-premium-nav px-6 py-3 xl:px-10 xl:py-4 text-white rounded-full text-sm xl:text-base font-bold shadow-2xl tracking-wide uppercase inline-flex items-center justify-center">
                     {t('nav.contact')}
                 </a>
 </div>
+
+{/* Mobile Menu Button */}
+<div className="flex lg:hidden items-center gap-2">
+  <button onClick={toggleLang} className="bg-violet-600/10 hover:bg-violet-600/20 text-white px-2 sm:px-3 py-1.5 rounded-full border border-violet-500/30 text-[10px] sm:text-xs font-bold transition-all flex items-center justify-center min-w-[36px] shadow-sm active:scale-95">
+    {lang === 'es' ? 'EN' : 'ES'}
+  </button>
+  <a href="https://wa.me/524494401613?text=Hola%2C%20me%20interesa%20agendar%20una%20cita%20con%20Vanta%20Solutions" target="_blank" rel="noopener noreferrer" className="bg-violet-600 hover:bg-violet-500 px-3 py-1.5 text-white rounded-full text-[10px] sm:text-xs font-bold shadow-lg shadow-violet-500/20 tracking-wide uppercase inline-flex items-center justify-center whitespace-nowrap transition-colors">
+    {t('nav.contact')}
+  </a>
+  <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-300 hover:text-white p-1 ml-1">
+    <span className="material-symbols-outlined text-3xl">{isMobileMenuOpen ? 'close' : 'menu'}</span>
+  </button>
 </div>
 </div>
+</div>
+
+{/* Mobile Menu Dropdown */}
+{isMobileMenuOpen && (
+  <div className="lg:hidden fixed inset-0 z-60 flex justify-end">
+    {/* Overlay para cerrar al dar click fuera */}
+    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setIsMobileMenuOpen(false)}></div>
+    
+    {/* Panel Lateral */}
+    <div className="relative w-[65%] sm:w-[50%] h-dvh bg-[#050308]/98 backdrop-blur-2xl border-l border-white/10 flex flex-col items-end justify-center pr-8 gap-8 shadow-2xl animate-fade-in">
+      
+      {/* Botón X de cerrado */}
+      <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors p-2 bg-white/5 border border-white/10 rounded-full active:scale-95 flex flex-col items-center justify-center">
+        <span className="material-symbols-outlined text-2xl">close</span>
+      </button>
+
+      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#manifesto">{t('nav.manifesto')}</a>
+      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#hero">{t('nav.hero')}</a>
+      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#pain-points">{t('nav.pain_points')}</a>
+      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#command">{t('nav.command')}</a>
+      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#projects">Proyectos</a>
+      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#contact">Contáctanos</a>
+    </div>
+  </div>
+)}
 </nav>
 
 <section className="py-32 relative overflow-hidden bg-[#050505] flex items-center justify-center min-h-screen" id="manifesto">
@@ -443,14 +514,24 @@ export default function App() {
   <div className={`hud-corner bl ${isLoaderComplete ? 'opacity-100 scale-100' : 'opacity-0 scale-90'} transition-all duration-700 delay-500`}></div>
   <div className={`hud-corner br ${isLoaderComplete ? 'opacity-100 scale-100' : 'opacity-0 scale-90'} transition-all duration-700 delay-500`}></div>
 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-<div className="lg:col-span-4 relative group">
+<div className="order-2 lg:order-1 lg:col-span-4 relative group">
 <p className={`text-xl md:text-2xl text-gray-400 font-light leading-relaxed relative flashlight-text ${isLoaderComplete ? 'cinematic-fade-up' : 'opacity-0'}`} style={{animationDelay: '0.4s'}}>
                     {t('manifesto.line1')}
                     <span className="text-white font-medium">{t('manifesto.line2')}</span>
 </p>
+
+{/* Mobile-only copy of line 6 */}
+<div className="flex justify-end mt-12 lg:hidden">
+  <div className="inline-block relative">
+    <p className={`relative text-xl md:text-2xl text-gray-300 font-light max-w-lg ml-auto text-right border-r-2 border-violet-500 pr-6 mr-2 sm:mr-4 flashlight-text ${isLoaderComplete ? 'cinematic-fade-up' : 'opacity-0'}`} style={{animationDelay: '4.8s'}}>
+      {t('manifesto.line6')}
+    </p>
+  </div>
 </div>
-      <div className="lg:col-span-8 text-right relative z-20">
-        <h2 className="font-display text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] uppercase text-white mb-6" style={{ minHeight: '2em' }}>
+
+</div>
+      <div className="order-1 lg:order-2 lg:col-span-8 text-right relative z-20">
+        <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.9] uppercase text-white mb-6 break-words" style={{ minHeight: '2em' }}>
           {isLoaderComplete && (
             <>
               <Typewriter text={t('manifesto.line3')} delay={500} speed={40} /><br />
@@ -458,13 +539,15 @@ export default function App() {
             </>
           )}
         </h2>
-        <div className={`font-display text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] uppercase text-right w-full block ${isLoaderComplete ? 'cinematic-power' : 'opacity-0 scale-95'}`} style={{filter: 'drop-shadow(0 0 20px rgba(139,92,246,0.6))', animationDelay: '2.8s'}}>
+        <div className={`font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.9] uppercase text-right w-full block break-words ${isLoaderComplete ? 'cinematic-power' : 'opacity-0 scale-95'}`} style={{filter: 'drop-shadow(0 0 20px rgba(139,92,246,0.6))', animationDelay: '2.8s'}}>
           <span className="text-white">{t('manifesto.line5')} </span>
           <span className="text-transparent bg-clip-text bg-linear-to-r from-white via-violet-200 to-gray-400">
             {t('manifesto.power')}
           </span>
         </div>
-        <div className="flex justify-end mt-8">
+        
+        {/* Desktop-only copy of line 6 */}
+        <div className="hidden lg:flex justify-end mt-8">
           <div className="inline-block relative">
             <p className={`relative text-xl md:text-2xl text-gray-300 font-light max-w-lg ml-auto text-right border-r-2 border-violet-500 pr-6 mr-4 flashlight-text ${isLoaderComplete ? 'cinematic-fade-up' : 'opacity-0'}`} style={{animationDelay: '4.8s'}}>
               {t('manifesto.line6')}
@@ -502,10 +585,7 @@ export default function App() {
 <span>{t('hero.cta_primary')}</span>
 <span className="material-symbols-outlined text-xl">event_available</span>
 </a>
-<button className="glass-panel text-white px-10 py-5 rounded-full text-lg font-medium flex items-center justify-center gap-3 border-white/20">
-<span>{t('hero.cta_secondary')}</span>
-<span className="material-symbols-outlined">data_exploration</span>
-</button>
+
 </div>
 <div className="pt-4 border-t border-white/5">
 <ul className="space-y-3">
@@ -616,12 +696,12 @@ export default function App() {
 <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
 <defs>
 <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
-<stop offset="0%" stop-color="rgba(139, 92, 246, 0.4)"></stop>
-<stop offset="100%" stop-color="rgba(59, 130, 246, 0)"></stop>
+<stop offset="0%" stopColor="rgba(139, 92, 246, 0.4)"></stop>
+<stop offset="100%" stopColor="rgba(59, 130, 246, 0)"></stop>
 </linearGradient>
 <linearGradient id="lineGradient" x1="0" x2="1" y1="0" y2="0">
-<stop offset="0%" stop-color="#8B5CF6"></stop>
-<stop offset="100%" stop-color="#3B82F6"></stop>
+<stop offset="0%" stopColor="#8B5CF6"></stop>
+<stop offset="100%" stopColor="#3B82F6"></stop>
 </linearGradient>
 </defs>
 <path className="chart-area" d="M0,80 C20,75 30,60 50,40 C70,20 80,25 100,10 L100,100 L0,100 Z" fill="url(#chartGradient)"></path>
@@ -736,12 +816,12 @@ export default function App() {
               {card.title2}
             </h3>
             
-            <p className="text-sm text-gray-400 leading-relaxed mb-8 font-medium">
+            <div className="text-sm text-gray-400 leading-relaxed mb-8 font-medium">
               {idx === 1 ? <DisorderedWords text={card.desc} /> : 
                idx === 2 ? <StaticWords text={card.desc} /> :
                idx === 3 ? <VisibilityWords text={card.desc} resetTrigger={resetVisibility} /> : 
                card.desc}
-            </p>
+            </div>
 
             <div className="pt-4 border-t border-white/5">
               <span className="text-[10px] font-mono text-red-500/60 tracking-wider font-bold">
@@ -767,8 +847,8 @@ export default function App() {
 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 <div className={`text-center mb-20 transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${showComparison ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-5 blur-sm'}`}>
 <p className="text-violet-500 font-bold text-xs font-mono uppercase tracking-[0.3em] mb-4">{t('comparison.eyebrow')}</p>
-<h2 className="font-display text-5xl lg:text-7xl font-bold text-white mb-2 leading-tight">{t('comparison.title_main')}</h2>
-<h2 className="font-display text-5xl lg:text-7xl font-bold text-transparent bg-clip-text bg-linear-to-r from-violet-400 via-indigo-400 to-blue-400 mb-8 italic">{t('comparison.title_accent')}</h2>
+<h2 className="font-display text-4xl sm:text-5xl lg:text-7xl font-bold text-white mb-2 leading-tight">{t('comparison.title_main')}</h2>
+<h2 className="font-display text-4xl sm:text-5xl lg:text-7xl font-bold text-transparent bg-clip-text bg-linear-to-r from-violet-400 via-indigo-400 to-blue-400 mb-8 italic">{t('comparison.title_accent')}</h2>
 <p className="text-gray-400 max-w-2xl mx-auto text-lg font-light leading-relaxed">{t('comparison.subtitle')}</p>
 </div>
 
@@ -825,7 +905,10 @@ export default function App() {
 <li key={item.id} 
     className="vanta-comparison-item group/item"
     style={{ 
-        animation: showComparison ? `premium-reveal-right 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards` : 'none',
+        animationName: showComparison ? 'premium-reveal-right' : 'none',
+        animationDuration: '0.8s',
+        animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        animationFillMode: 'forwards',
         animationDelay: `${0.5 + i * 0.15}s`,
         opacity: 0 
     }}>
@@ -1767,17 +1850,12 @@ export default function App() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center mb-32">
-        <div>
+        <div className="text-center lg:text-left">
           <h2 className="font-display text-7xl md:text-8xl font-bold text-white mb-12 tracking-tight leading-tight">
             {t('cta_bottom.title_main')} <br /> 
             <span className="gradient-heading italic">{t('cta_bottom.title_accent')}</span>
           </h2>
-          <div className="flex flex-col sm:flex-row gap-6">
-            <button className="glass-panel text-white px-10 py-5 rounded-full text-lg font-bold hover:bg-white/10 border-white/30 flex items-center justify-center gap-4 transition-all w-fit">
-              <span>{t('cta_bottom.btn2')}</span>
-              <span className="material-symbols-outlined">data_exploration</span>
-            </button>
-          </div>
+
         </div>
 
         <div className="relative">

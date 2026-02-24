@@ -29,11 +29,9 @@
     --indigo-accent: #6366f1;
   }
   html {
-    width: 111.111%;
-    height: 111.111%;
-    transform: scale(0.9);
-    transform-origin: top left;
-    overflow-x: clip;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    background-color: var(--background-deep); 
   }
   body {
     background: linear-gradient(to bottom, var(--background-violet) 0%, var(--background-deep) 100%);
@@ -41,6 +39,8 @@
     scroll-behavior: smooth;
     width: 100%;
     min-height: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
 }
@@ -89,12 +89,12 @@
   .cinematic-fade-up {
       opacity: 0;
       transform: translateY(20px);
-      filter: blur(8px);
       animation: cinematicFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      will-change: transform, opacity;
   }
   @keyframes cinematicFadeUp {
-      from { opacity: 0; transform: translateY(20px); filter: blur(8px); }
-      to { opacity: 1; transform: translateY(0); filter: blur(0); }
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
   }
 
   .cinematic-power {
@@ -121,11 +121,18 @@
   }
   .glass-panel {
     background: rgba(15, 7, 32, 0.5);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid var(--border-glow);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.1);
     transition: all 0.4s ease;
+  }
+  @media (min-width: 768px) {
+    .glass-panel {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+    }
   }
   .glass-panel:hover {
     border-color: var(--secondary);
@@ -137,8 +144,15 @@
   }
   .parallax-shape {
     pointer-events: none;
-    filter: blur(60px);
-    opacity: 0.4;
+    filter: blur(30px);
+    opacity: 0.2;
+    will-change: transform;
+  }
+  @media (min-width: 768px) {
+    .parallax-shape {
+      filter: blur(60px);
+      opacity: 0.4;
+    }
   }
   .gradient-heading {
     background: linear-gradient(to bottom right, #fff 20%, #8B5CF6 60%, #3B82F6 100%);
@@ -318,6 +332,22 @@
       /* Mobile: show 1.2 cards */
       min-width: 80vw;
       max-width: 80vw;
+      position: relative;
+      z-index: 10;
+      border-radius: 2rem;
+      /* Evita atrapar ratón en las esquinas cuadradas */
+      pointer-events: none;
+  }
+  
+  /* Atrapador de ratón estático con la forma redondeada exacta.
+     Al no estar dentro del contenedor 3D que gira, no "resbala" el hover. */
+  .flip-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      border-radius: 2rem;
+      pointer-events: auto;
   }
   @media (min-width: 768px) {
       .flip-card {
@@ -338,8 +368,9 @@
       width: 100%;
       height: 100%;
       text-align: left;
-      transition: transform 0.8s;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
       transform-style: preserve-3d;
+      border-radius: 2rem;
   }
   .flip-card:hover .flip-card-inner {
       transform: rotateY(180deg);
@@ -357,10 +388,11 @@
   }
   .flip-card-front {
       background: #0a0514;
+      transform: rotateY(0deg) translateZ(1px);
   }
   .flip-card-back {
       background: #050308;
-      transform: rotateY(180deg);
+      transform: rotateY(180deg) translateZ(1px);
       border: 1px solid rgba(139, 92, 246, 0.3);
       box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
   }
@@ -608,7 +640,10 @@
 }
 
 .cinematic-fade-up {
-  animation: cinematic-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-name: cinematic-fade-up;
+  animation-duration: 1.2s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
 }
 
 .cinematic-power {
@@ -813,7 +848,10 @@
 }
 
 .card-diagnostic.revealed {
-  animation: title-reveal 1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  animation-name: title-reveal;
+  animation-duration: 1s;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  animation-fill-mode: forwards;
 }
 
 .card-diagnostic:hover {
