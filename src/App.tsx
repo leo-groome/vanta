@@ -1,1167 +1,1869 @@
-import { useState, useRef, useEffect } from 'react'
-import logo from './assets/logo.svg'
-import './App.css'
+import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import logo from './assets/logo.svg';
 
-type Lang = 'es' | 'en'
-
-type FormState = {
-  name: string
-  company: string
-  whatsapp: string
-  email: string
-  industry: string
-  goal: string
-  message: string
-  website: string
-}
-
-const WHATSAPP_LINK_ES =
-  'https://wa.me/524494401613?text=Hola,%20soy%20___%20de%20___%20(industria:%20___).%20Quiero%20un%20diagnostico%20para%20saber%20si%20mi%20negocio%20es%20rentable%20y%20c%C3%B3mo%20mejorarlo.'
-
-const SIGNATURE = '— Vanta Solutions | Ingenieria de elite'
-
-const content: Record<Lang, {
-  nav: Record<string, string>
-  ctaPrimary: string
-  ctaSecondary: string
-  pricingLine: string
-  hero: Record<string, string>
-  aside: Record<string, string>
-  manifesto: { title: string; lines: string[] }
-  dna: { title: string; subtitle: string; items: { title: string; body: string }[] }
-  strategy: {
-    title: string
-    summary: { label: string; text: string }
-    impact: { title: string; items: { value: string; label: string }[] }
-    protocol: { title: string; steps: string[] }
-    differentiator: { title: string; items: string[] }
-  }
-  capabilities: { title: string; subtitle: string; items: { title: string; body: string }[] }
-  differentiator: { title: string; subtitle: string }
-  process: { title: string; subtitle: string; steps: { title: string; body: string }[] }
-  cases: { 
-    title: string; 
-    subtitle: string; 
-    items: { 
-      title: string; 
-      body: string; 
-      status: 'PRODUCTION' | 'DEVELOPMENT'; 
-      phase?: string; 
-      metrics?: string[];
-      tech?: {
-        users: string;
-        modules: string;
-        integrations: string;
-      };
-    }[] 
-  }
-  faq: { title: string; subtitle: string; items: { q: string; a: string }[] }
-  contact: {
-    title: string
-    subtitle: string
-    formTitle: string
-    submit: string
-    submitting: string
-    success: string
-    error: string
-    note: string
-    fields: Record<string, string>
-    industries: string[]
-    goals: string[]
-  }
-  footer: Record<string, string>
-}> = {
-  es: {
-    nav: {
-      manifesto: 'La Firma',
-      dna: 'Capacidades',
-      method: 'Arquitectura de Ejecución',
-      cases: 'Proyectos',
-      contact: 'Contacto Ejecutivo',
-    },
-    ctaPrimary: 'Agendar cita',
-    ctaSecondary: 'WhatsApp',
-    pricingLine: 'Diagnostico estrategico sin costo · Software 100% a medida',
-    hero: {
-      eyebrow: 'Aguascalientes, Mexico · Ingenieria de elite',
-      title: 'Eficiencia absoluta para operaciones complejas',
-      subtitle: 'Diseccionamos, automatizamos y convertimos procesos en sistemas precisos',
-    },
-    aside: {
-      kpi1Label: 'En produccion',
-      kpi1Value: '1 sistema activo',
-      kpi2Label: 'En desarrollo',
-      kpi2Value: '4 implementaciones',
-      kpi3Label: 'Modelo',
-      kpi3Value: '100% a medida',
-    },
-    manifesto: {
-      title: 'Manifiesto',
-      lines: [
-        'El mundo esta lleno de software dificil, lento y generico. El tiempo se escapa en procesos que deberian ser invisibles.',
-        'En Vanta Solutions no hacemos programas; disenamos poder. Aplicamos ingenieria de elite para que lo complejo se vuelva simple y lo manual se vuelva automatico.',
-        'No somos los mas baratos; somos los que entienden tu proceso mejor que tu mismo. Bienvenido a la era de la eficiencia absoluta.',
-      ],
-    },
-    dna: {
-      title: 'Nuestro ADN',
-      subtitle: 'Mision, vision y principios operativos.',
-      items: [
-        {
-          title: 'MISIÓN ESTRATÉGICA',
-          body:
-            'Erradicar la ineficiencia empresarial mediante software a medida y automatizaciones de vanguardia que transforman procesos complejos en herramientas intuitivas y poderosas.',
-        },
-        {
-          title: 'VISIÓN GLOBAL',
-          body:
-            'Convertirnos en el estandar global de infraestructura tecnologica para las empresas mas influyentes del mundo.',
-        },
-        {
-          title: 'PRINCIPIOS OPERATIVOS',
-          body:
-            'Precisión, transparencia y disciplina estructural guían cada decisión. Construimos soluciones medibles, escalables y documentadas, priorizando control operativo y sostenibilidad a largo plazo.',
-        },
-      ],
-    },
-    capabilities: {
-      title: 'ARQUITECTURA DE EJECUCIÓN',
-      subtitle: 'Tres frentes, un sistema.',
-      items: [
-        {
-          title: 'Arquitectura operativa',
-          body: 'Modelamos flujos, datos y decisiones antes de escribir una linea. La precision nace del diagnostico.',
-        },
-        {
-          title: 'Automatizacion avanzada',
-          body: 'Conectamos sistemas, eliminamos pasos manuales y reducimos el tiempo muerto con flujos inteligentes.',
-        },
-        {
-          title: 'Interfaces de control',
-          body: 'UX/UI sobria y rapida para equipos que necesitan ejecutar sin friccion.',
-        },
-      ],
-    },
-    differentiator: {
-      title: 'El Ingeniero de Elite',
-      subtitle:
-        'Directos, resolutivos y tres pasos adelante del futuro. Construimos con sobriedad tecnica, sin ruido corporativo.',
-    },
-    process: {
-      title: 'PROTOCOLO OPERATIVO',
-      subtitle: 'Ejecución secuencial orientada a impacto real.',
-      steps: [
-        {
-          title: 'Diagnóstico estructural',
-          body: 'Auditamos procesos, roles y datos. Identificamos los cuellos reales.',
-        },
-        {
-          title: 'Diseño de arquitectura operativa',
-          body: 'Definimos arquitectura, automatizaciones y prioridades con impacto medible.',
-        },
-        {
-          title: 'Implementación controlada',
-          body: 'Entregas frecuentes con visibilidad total del avance.',
-        },
-        {
-          title: 'Optimización continua',
-          body: 'Soporte y optimización continua para mantener eficiencia.',
-        },
-      ],
-    },
-    strategy: {
-      title: 'MÓDULO DE ARQUITECTURA DE SISTEMAS',
-      summary: {
-        label: 'Resumen Ejecutivo',
-        text: 'Vanta Solutions es una firma de ingeniería tecnológica especializada en arquitectura operativa y automatización estructural para empresas que requieren precisión, escalabilidad y control absoluto sobre sus procesos.',
-      },
-      impact: {
-        title: 'IMPACTO MEDIBLE',
-        items: [
-          { value: '+30%', label: 'eficiencia operativa promedio' },
-          { value: '4', label: 'implementaciones activas' },
-          { value: '100%', label: 'software a medida' },
-          { value: '0', label: 'soluciones genéricas' },
-        ],
-      },
-      protocol: {
-        title: 'PROTOCOLO DE IMPLEMENTACIÓN',
-        steps: [
-          'Diagnóstico estructural',
-          'Diseño de arquitectura operativa',
-          'Implementación controlada',
-          'Optimización continua',
-        ],
-      },
-      differentiator: {
-        title: 'DIFERENCIADOR',
-        items: [
-          'No usamos plantillas.',
-          'No vendemos SaaS genérico.',
-          'No tercerizamos arquitectura crítica.',
-          'Diseñamos infraestructura desde cero.',
-        ],
-      },
-    },
-    cases: {
-      title: 'SISTEMAS ACTIVOS',
-      subtitle: 'Infraestructura tecnológica en operación y despliegue continuo.',
-      items: [
-        {
-          title: 'RESTAURANTES: POS + SUPPLY',
-          body: 'Arquitectura unificada para control de punto de venta, cocina e inventarios estructurales.',
-          status: 'PRODUCTION',
-          metrics: ['CONTROL DE INVENTARIO', 'GESTION DE COCINA', 'POS INTEGRADO'],
-          phase: 'Prototipo funcional',
-          tech: { users: '20+', modules: '12', integrations: '04' }
-        },
-        {
-          title: 'CLÍNICA DENTAL: CORE',
-          body: 'Sistema de arquitectura centralizada para gestión clínica, financiera y operativa.',
-          status: 'DEVELOPMENT',
-          metrics: ['AGENDA CENTRALIZADA', 'CONTROL FINANCIERO', 'PANEL OPERATIVO'],
-          tech: { users: '12+', modules: '08', integrations: '03' }
-        },
-        {
-          title: 'PROFESSIONAL SERVICES: ERP',
-          body: 'Plataforma técnica para seguimiento de proyectos, tiempos y márgenes de rentabilidad.',
-          status: 'DEVELOPMENT',
-          metrics: ['TRACKING DE TIEMPOS', 'MARGENES POR PROYECTO', 'REPORTES REAL-TIME'],
-          phase: 'Modelado de datos',
-          tech: { users: '05+', modules: '06', integrations: '02' }
-        },
-        {
-          title: 'CUSTOMER RELATIONSHIP MANAGEMENT: CRM',
-          body: 'Sistema de inteligencia comercial centralizado diseñado para gestionar relaciones con clientes, embudos de ventas y rendimiento de ingresos en tiempo real.',
-          status: 'DEVELOPMENT',
-          metrics: ['CONTROL DE EMBUDO DE VENTAS','SEGUIMIENTO DE LEADS','SEGUIMIENTO AUTOMATIZADO'],
-          phase: 'Modelado de arquitectura',
-          tech: { users: '20+', modules: '08', integrations: '06' }
-        },
-        {
-          title: 'RETAIL: STOCK CONTROL',
-          body: 'Infraestructura de inventario y reposición automatizada para tiendas especializadas.',
-          status: 'DEVELOPMENT',
-          metrics: ['REPOSICION AUTOMATICA', 'CONTROL DE MERMAS', 'ALERTAS DE STOCK'],
-          phase: 'Fase Discovery',
-          tech: { users: '30+', modules: '09', integrations: '03' }
-        },
-      ],
-    },
-    faq: {
-      title: 'BRIEF DE DECISIÓN',
-      subtitle: 'Respuestas directas para tomar decision rapido.',
-      items: [
-        {
-          q: 'Como definen alcance y costo?',
-          a: 'Proyecto por entregables. Priorizamos impacto y eliminamos sorpresas.',
-        },
-        {
-          q: 'El codigo es del cliente?',
-          a: 'Si. El sistema y sus entregables quedan para el cliente segun la propuesta.',
-        },
-        {
-          q: 'Incluyen soporte post-lanzamiento?',
-          a: 'Si. Definimos una fase de mejora continua segun tus necesidades.',
-        },
-        {
-          q: 'Trabajan con empresas fuera de Aguascalientes?',
-          a: 'Si. Operamos remoto con entregas claras y seguimiento continuo.',
-        },
-      ],
-    },
-    contact: {
-      title: 'Solicita tu diagnostico estrategico.',
-      subtitle: 'Comparte lo esencial. Respondemos con un plan claro.',
-      formTitle: 'Brief operativo',
-      submit: 'Enviar solicitud',
-      submitting: 'Enviando...',
-      success: 'Listo. Recibimos tu solicitud. Te contactamos por WhatsApp.',
-      error: 'No se pudo enviar en este momento. Prueba por WhatsApp o intenta de nuevo.',
-      note: 'Sin spam. Solo para coordinar tu diagnostico.',
-      fields: {
-        name: 'Nombre',
-        company: 'Empresa',
-        whatsapp: 'WhatsApp',
-        email: 'Correo',
-        industry: 'Industria',
-        goal: 'Objetivo principal',
-        message: 'Contexto (opcional)',
-      },
-      industries: ['Salud', 'Servicios', 'Logistica', 'Restaurantes', 'Retail', 'Otra'],
-      goals: ['Eficiencia operativa', 'Control financiero', 'Automatizacion', 'Visibilidad de datos', 'Otro'],
-    },
-    footer: {
-      title: 'VANTA SOLUTIONS',
-      location: 'Aguascalientes, Mexico',
-      email: 'VantaSolutions-Service@outlook.com',
-      instagram: '@Vantasolutions',
-    },
-  },
-  en: {
-    nav: {
-      manifesto: 'The Firm',
-      dna: 'Capabilities',
-      method: 'Operational Architecture',
-      cases: 'Projects',
-      contact: 'Executive Contact',
-    },
-    ctaPrimary: 'Schedule appointment',
-    ctaSecondary: 'WhatsApp',
-    pricingLine: 'Strategic diagnostic at no cost · 100% custom software',
-    hero: {
-      eyebrow: 'Aguascalientes, Mexico · Elite engineering',
-      title: 'Absolute efficiency for complex operations',
-      subtitle: 'We dissect, automate, and turn processes into precise systems',
-    },
-    aside: {
-      kpi1Label: 'In production',
-      kpi1Value: '1 live system',
-      kpi2Label: 'In delivery',
-      kpi2Value: '4 implementations',
-      kpi3Label: 'Model',
-      kpi3Value: '100% custom',
-    },
-    manifesto: {
-      title: 'Manifesto',
-      lines: [
-        'The world is full of software that is slow, generic, and hard to use. Time leaks through processes that should be invisible.',
-        'At Vanta Solutions we do not ship programs; we design power. We apply elite engineering so the complex becomes simple and the manual becomes automatic.',
-        'We are not the cheapest; we are the ones who understand your process better than anyone. Welcome to the era of absolute efficiency.',
-      ],
-    },
-    dna: {
-      title: 'Our DNA',
-      subtitle: 'Mission, vision, and operational principles.',
-      items: [
-        {
-          title: 'STRATEGIC MISSION',
-          body:
-            'Eradicate business inefficiency through custom software and cutting-edge automation that turns complex processes into intuitive, powerful tools.',
-        },
-        {
-          title: 'GLOBAL VISION',
-          body: 'Become the global standard for technological infrastructure in the most influential companies in the world.',
-        },
-        {
-          title: 'OPERATIONAL PRINCIPLES',
-          body:
-            'While others deliver generic patches, we dissect your internal processes to build the engine that drives your growth.',
-        },
-      ],
-    },
-    capabilities: {
-      title: 'EXECUTION ARCHITECTURE',
-      subtitle: 'Three fronts, one system.',
-      items: [
-        {
-          title: 'Operational architecture',
-          body: 'We model flows, data, and decisions before writing a line of code. Precision starts with diagnosis.',
-        },
-        {
-          title: 'Advanced automation',
-          body: 'We connect systems, remove manual steps, and reduce downtime with intelligent workflows.',
-        },
-        {
-          title: 'Control interfaces',
-          body: 'Sober, fast UX/UI for teams that need to execute without friction.',
-        },
-      ],
-    },
-    differentiator: {
-      title: 'The Elite Engineer',
-      subtitle: 'Direct, resolute, and three steps ahead of the future. We build with technical clarity, no corporate noise.',
-    },
-    process: {
-      title: 'OPERATIONAL PROTOCOL',
-      subtitle: 'Sequential execution oriented to real impact.',
-      steps: [
-        {
-          title: 'Structural diagnostic',
-          body: 'We audit processes, roles, and data. We identify the real bottlenecks.',
-        },
-        {
-          title: 'Operational architecture design',
-          body: 'We define architecture, automation, and priorities with measurable impact.',
-        },
-        {
-          title: 'Controlled implementation',
-          body: 'Frequent deliveries with full visibility on progress.',
-        },
-        {
-          title: 'Continuous optimization',
-          body: 'Continuous support and optimization to maintain efficiency.',
-        },
-      ],
-    },
-    strategy: {
-      title: 'SYSTEM ARCHITECTURE MODULE',
-      summary: {
-        label: 'Executive Summary',
-        text: 'Vanta Solutions is a technological engineering firm specialized in operational architecture and structural automation for companies requiring precision, scalability, and absolute control over their processes.',
-      },
-      impact: {
-        title: 'MEASURABLE IMPACT',
-        items: [
-          { value: '+30%', label: 'average operational efficiency' },
-          { value: '4', label: 'active implementations' },
-          { value: '100%', label: 'custom software' },
-          { value: '0', label: 'generic solutions' },
-        ],
-      },
-      protocol: {
-        title: 'IMPLEMENTATION PROTOCOL',
-        steps: [
-          'Structural diagnostic',
-          'Operational architecture design',
-          'Controlled implementation',
-          'Continuous optimization',
-        ],
-      },
-      differentiator: {
-        title: 'DIFFERENTIATOR',
-        items: [
-          'No templates used.',
-          'No generic SaaS sales.',
-          'No critical architecture outsourcing.',
-          'Custom infrastructure design from scratch.',
-        ],
-      },
-    },
-    cases: {
-      title: 'ACTIVE SYSTEMS',
-      subtitle: 'Technological infrastructure in continuous operation and deployment.',
-      items: [
-        {
-          title: 'RESTAURANTS: POS + SUPPLY',
-          body: 'Unified architecture for point of sale control, kitchen flow, and structural inventories.',
-          status: 'PRODUCTION',
-          metrics: ['INVENTORY CONTROL', 'KITCHEN MANAGEMENT', 'INTEGRATED POS'],
-          phase: 'Functional prototype',
-          tech: { users: '20+', modules: '12', integrations: '04' }
-        },
-        {
-          title: 'DENTAL CLINIC: CORE',
-          body: 'Centralized architecture system for clinical, financial, and operational management.',
-          status: 'DEVELOPMENT',
-          metrics: ['CENTRALIZED SCHEDULE', 'FINANCIAL CONTROL', 'OPERATIONAL PANEL'],
-          tech: { users: '12+', modules: '08', integrations: '03' }
-        },
-        {
-          title: 'PROFESSIONAL SERVICES: ERP',
-          body: 'Technical platform for project tracking, time management, and profitability margins.',
-          status: 'DEVELOPMENT',
-          metrics: ['TIME TRACKING', 'PROJECT MARGINS', 'REAL-TIME REPORTING'],
-          phase: 'Data modeling',
-          tech: { users: '05+', modules: '06', integrations: '02' }
-        },
-        {
-          title: 'CUSTOMER RELATIONSHIP MANAGEMENT: CRM',
-          body: 'Centralized commercial intelligence system designed to manage client relationships, sales pipelines and revenue performance in real time.',
-          status: 'DEVELOPMENT',
-          metrics: ['SALES PIPELINE CONTROL','LEAD TRACKING','AUTOMATED FOLLOW-UPS'],
-          phase: 'Architecture modeling',
-          tech: {users: '20+',modules: '08',integrations: '06'}
-        },
-        {
-          title: 'RETAIL: STOCK CONTROL',
-          body: 'Inventory infrastructure and automated replenishment for specialized stores.',
-          status: 'DEVELOPMENT',
-          metrics: ['AUTO REPLENISHMENT', 'WASTE CONTROL', 'STOCK ALERTS'],
-          phase: 'Discovery phase',
-          tech: { users: '30+', modules: '09', integrations: '03' }
-        },
-      ],
-    },
-    faq: {
-      title: 'DECISION BRIEF',
-      subtitle: 'Direct answers for decisive teams.',
-      items: [
-        {
-          q: 'How do you define scope and cost?',
-          a: 'Project-based with clear deliverables. We prioritize impact and eliminate surprises.',
-        },
-        {
-          q: 'Do we own the code?',
-          a: 'Yes. The system and deliverables are yours as defined in the proposal.',
-        },
-        {
-          q: 'Do you include post-launch support?',
-          a: 'Yes. We define a continuous improvement phase for your needs.',
-        },
-        {
-          q: 'Do you work with teams outside Aguascalientes?',
-          a: 'Yes. We operate remotely with clear milestones and constant follow-up.',
-        },
-      ],
-    },
-    contact: {
-      title: 'Request your strategic diagnostic.',
-      subtitle: 'Share the essentials. We answer with a clear plan.',
-      formTitle: 'Operational brief',
-      submit: 'Send request',
-      submitting: 'Sending...',
-      success: "Done. We received your request. We'll reach out via WhatsApp.",
-      error: 'Could not send right now. Try WhatsApp or retry.',
-      note: 'No spam. Only to coordinate your diagnostic.',
-      fields: {
-        name: 'Name',
-        company: 'Company',
-        whatsapp: 'WhatsApp',
-        email: 'Email',
-        industry: 'Industry',
-        goal: 'Primary goal',
-        message: 'Context (optional)',
-      },
-      industries: ['Health', 'Services', 'Logistics', 'Restaurants', 'Retail', 'Other'],
-      goals: ['Operational efficiency', 'Financial control', 'Automation', 'Data visibility', 'Other'],
-    },
-    footer: {
-      title: 'VANTA SOLUTIONS',
-      location: 'Aguascalientes, Mexico',
-      email: 'VantaSolutions-Service@outlook.com',
-      instagram: '@Vantasolutions',
-    },
-  },
-}
-
-function scrollToId(id: string) {
-  const el = document.getElementById(id)
-  if (!el) return
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-function App() {
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const dashboardRef = useRef<HTMLDivElement>(null)
-  const [isDashboardActive, setIsDashboardActive] = useState(false)
-  const [autoRotate, setAutoRotate] = useState(true)
-  const [activeSystemIndex, setActiveSystemIndex] = useState(0)
-
-  const [lang, setLang] = useState<Lang>(() => {
-    const raw = localStorage.getItem('lang')
-    if (raw === 'es' || raw === 'en') return raw
-    const nav = navigator.language.toLowerCase()
-    return nav.startsWith('es') ? 'es' : 'en'
-  })
-
-  const t = content[lang]
+const Typewriter = ({ text, delay = 0, speed = 30, className = "", onComplete, startTrigger = true }: { text: string, delay?: number, speed?: number, className?: string, onComplete?: () => void, startTrigger?: boolean }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsDashboardActive(true)
+    if (!startTrigger) return;
+    
+    const timeout = setTimeout(() => {
+      setHasStarted(true);
+      let i = 0;
+      const interval = setInterval(() => {
+        setDisplayedText(text.slice(0, i + 1));
+        i++;
+        if (i >= text.length) {
+          clearInterval(interval);
+          if (onComplete) onComplete();
         }
-      },
-      { threshold: 0.1 }
-    )
-    if (dashboardRef.current) observer.observe(dashboardRef.current)
-    return () => observer.disconnect()
-  }, [])
+      }, speed);
+      return () => clearInterval(interval);
+    }, delay);
 
-  function scrollProjects(dir: 'left' | 'right') {
-    const total = t.cases.items.length
-    if (dir === 'left') {
-      setActiveSystemIndex((prev) => (prev - 1 + total) % total)
-    } else {
-      setActiveSystemIndex((prev) => (prev + 1) % total)
-    }
-  }
-
-  // Automatic cycling of the Active Systems panel every 5 seconds
-  useEffect(() => {
-    if (!autoRotate) return
-    const id = window.setInterval(() => {
-      scrollProjects('right')
-    }, 5000)
-    return () => window.clearInterval(id)
-  }, [autoRotate, t.cases.items.length])
-
-  useEffect(() => {
-    if (!scrollRef.current) return
-    const container = scrollRef.current
-    const item = container.children[activeSystemIndex] as HTMLElement
-    if (item) {
-      const target = item.offsetLeft - (container.clientWidth - item.clientWidth) / 2
-      container.scrollTo({ left: target, behavior: 'smooth' })
-    }
-  }, [activeSystemIndex])
-
-  const [form, setForm] = useState<FormState>({
-    name: '',
-    company: '',
-    whatsapp: '',
-    email: '',
-    industry: '',
-    goal: '',
-    message: '',
-    website: '',
-  })
-
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-
-  function onLang(next: Lang) {
-    setLang(next)
-    localStorage.setItem('lang', next)
-    document.documentElement.lang = next
-  }
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-
-    if (form.website.trim().length > 0) return
-
-    if (!form.name || !form.company || !form.whatsapp || !form.email || !form.industry || !form.goal) {
-      setStatus('error')
-      return
-    }
-
-    setStatus('loading')
-
-    try {
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...form,
-          lang,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to send')
-      }
-
-      setStatus('success')
-      setForm({
-        name: '',
-        company: '',
-        whatsapp: '',
-        email: '',
-        industry: '',
-        goal: '',
-        message: '',
-        website: '',
-      })
-    } catch (error) {
-      console.error('Submission error:', error)
-      setStatus('error')
-    }
-  }
+    return () => clearTimeout(timeout);
+  }, [text, delay, speed, onComplete, startTrigger]);
 
   return (
-    <div className="app">
-      <header className="header">
-        <div className="container header-inner">
-          <a href="#" className="brand" onClick={(e) => (e.preventDefault(), scrollToId('top'))}>
-            <img src={logo} alt="Vanta Logo" className="brand-logo" />
-            <span className="brand-text">
-              <span>VANTA</span>
-              <small>SOLUTIONS</small>
-            </span>
-          </a>
+    <span className={className}>
+      {displayedText}
+      {hasStarted && displayedText.length < text.length && <span className="w-[3px] h-[0.8em] bg-violet-500 animate-pulse ml-1 inline-block align-baseline"></span>}
+    </span>
+  );
+};
 
-          <nav className="nav" aria-label="Primary">
-            <a href="#manifesto" onClick={(e) => (e.preventDefault(), scrollToId('manifesto'))}>
-              {t.nav.manifesto}
-            </a>
-            <a href="#dna" onClick={(e) => (e.preventDefault(), scrollToId('dna'))}>
-              {t.nav.dna}
-            </a>
-            <a href="#method" onClick={(e) => (e.preventDefault(), scrollToId('method'))}>
-              {t.nav.method}
-            </a>
-            <a href="#cases" onClick={(e) => (e.preventDefault(), scrollToId('cases'))}>
-              {t.nav.cases}
-            </a>
-            <a href="#contact" onClick={(e) => (e.preventDefault(), scrollToId('contact'))}>
-              {t.nav.contact}
-            </a>
-          </nav>
+const VantaLogo = ({ className = "" }: { className?: string }) => {
+  return (
+    <div className={`relative ${className} flex items-center justify-center`}>
+      {/* Rotating outer ring */}
+      <svg className="absolute w-[160%] h-[160%] animate-[spin_15s_linear_infinite] opacity-30" viewBox="0 0 100 100">
+        <circle 
+          cx="50" cy="50" r="48" 
+          fill="none" 
+          stroke="#8B5CF6" 
+          strokeWidth="0.5" 
+          strokeDasharray="2, 6"
+        />
+        <circle 
+          cx="50" cy="50" r="46" 
+          fill="none" 
+          stroke="#3B82F6" 
+          strokeWidth="1" 
+          strokeDasharray="40, 160"
+        />
+      </svg>
+      
+      {/* Inner scanning effect */}
+      <div className="absolute inset-0 z-0 overflow-hidden mask-image-circle">
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-violet-400/40 to-transparent animate-[scan_2s_linear_infinite] mix-blend-overlay" />
+      </div>
 
-          <div className="header-cta">
-            <div className="lang" aria-label="Language">
-              <button type="button" aria-pressed={lang === 'es'} onClick={() => onLang('es')}>
-                ES
-              </button>
-              <button type="button" aria-pressed={lang === 'en'} onClick={() => onLang('en')}>
-                EN
-              </button>
-            </div>
-            <button type="button" className="btn btn-nav" onClick={() => scrollToId('contact')}>
-              {t.ctaPrimary}
-            </button>
+      {/* The Logo */}
+      <img src={logo} alt="Vanta Logo" className="relative z-10 h-full w-auto object-contain brightness-110" />
+    </div>
+  );
+};
+
+const TypographicLoader = ({ onComplete }: { onComplete: () => void }) => {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    const fadeTimer = setTimeout(() => setPhase(1), 800);
+    const hideTimer = setTimeout(() => setPhase(2), 3200);
+    const endTimer = setTimeout(() => {
+      setPhase(3);
+      onComplete();
+    }, 4500);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(hideTimer);
+      clearTimeout(endTimer);
+    };
+  }, []);
+
+  return (
+    <div className={`fixed inset-0 z-[100] flex items-center justify-center bg-[#050505] transition-opacity duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${phase >= 2 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`flex flex-col items-center justify-center font-display transition-all duration-2000 ease-[cubic-bezier(0.16,1,0.3,1)]
+        ${phase === 0 ? 'opacity-0 blur-md scale-90' : ''}
+        ${phase === 1 ? 'opacity-100 blur-0 scale-100' : ''}
+        ${phase >= 2 ? 'opacity-0 blur-xl scale-110' : ''}
+      `}>
+        <VantaLogo className="h-28 md:h-40 lg:h-48 mb-12" />
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-5xl md:text-7xl lg:text-[5.5rem] font-black text-white leading-none tracking-tighter uppercase">VANTA</span>
+          <div className="h-px w-full bg-linear-to-r from-transparent via-violet-500 to-transparent opacity-50" />
+          <span className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-500 leading-none tracking-[0.2em] uppercase ml-2">SOLUTIONS</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DisorderedWords = ({ text }: { text: string }) => {
+  const words = text.split(' ');
+  return (
+    <div className="flex flex-wrap gap-x-1.5 gap-y-0.5 relative">
+      {words.map((word, i) => {
+        // Deterministic disordered values
+        const x = (Math.sin(i * 123.456) * 20).toFixed(2);
+        const y = (Math.cos(i * 789.012) * 15).toFixed(2);
+        const rot = (Math.sin(i * 456.789) * 25).toFixed(2);
+        
+        return (
+          <span
+            key={i}
+            className="disordered-word opacity-60"
+            style={{ 
+              transform: `translate(${x}px, ${y}px) rotate(${rot}deg)`,
+              ['--idx' as any]: i 
+            }}
+          >
+            {word}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
+const VisibilityWord = ({ word, forceReset }: { word: string; forceReset: boolean }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const timerRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (forceReset) {
+      setIsVisible(false);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    }
+  }, [forceReset]);
+
+  const handleReveal = () => {
+    if (isVisible) return;
+    setIsVisible(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setIsVisible(false);
+    }, 8000);
+  };
+
+  return (
+    <span
+      onMouseEnter={handleReveal}
+      className={`visibility-word text-lg font-bold transition-all duration-1000 cursor-default grayscale ${
+        isVisible ? 'opacity-100 blur-0 grayscale-0' : 'opacity-20 blur-[6px]'
+      }`}
+    >
+      {word}
+    </span>
+  );
+};
+
+const VisibilityWords = ({ text, resetTrigger }: { text: string; resetTrigger: boolean }) => {
+  const words = text.split(' ');
+  return (
+    <div className="flex flex-wrap gap-x-2 gap-y-1 relative group/visibility py-2">
+      {words.map((word, i) => (
+        <VisibilityWord key={i} word={word} forceReset={resetTrigger} />
+      ))}
+    </div>
+  );
+};
+
+const Counter = ({ value, duration = 1200, isVisible }: { value: string, duration?: number, isVisible: boolean }) => {
+  const [count, setCount] = useState(0);
+  const numericStr = value.replace(/^[^\d]*/, '').replace(/[^\d.].*$/, '');
+  const target = parseFloat(numericStr) || 0;
+  const prefix = value.match(/^[^\d]*/)?.[0] || '';
+  const suffix = value.replace(/^[^\d]*/, '').replace(/^[\d.]+/, '');
+
+  useEffect(() => {
+    if (!isVisible) {
+      setCount(0);
+      return;
+    }
+    
+    let start = 0;
+    const end = target;
+    const totalFrames = Math.round(duration / 16);
+    const increment = end / totalFrames;
+    let currentFrame = 0;
+
+    const timer = setInterval(() => {
+      currentFrame++;
+      start += increment;
+      if (currentFrame >= totalFrames) {
+        setCount(end);
+        clearInterval(timer);
+      } else {
+        setCount(start);
+      }
+    }, 16);
+
+    return () => clearInterval(timer);
+  }, [isVisible, target, duration]);
+
+  const displayCount = Number.isInteger(target) ? Math.floor(count) : count.toFixed(1);
+  return <span>{prefix}{displayCount}{suffix}</span>;
+};
+
+const StaticWords = ({ text }: { text: string }) => {
+  const words = text.split(' ');
+  return (
+    <div className="mt-4 relative group/static overflow-hidden border border-white/10 rounded-sm bg-black/40 pt-1">
+      {/* Excel Header row - Cleaned up */}
+      <div className="flex border-b border-white/10 bg-white/5 text-[9px] font-mono text-gray-500">
+        <div className="flex-1 px-2 py-0.5 border-r border-white/10">A</div>
+        <div className="flex-1 px-2 py-0.5 border-r border-white/10">B</div>
+        <div className="flex-1 px-2 py-0.5">C</div>
+      </div>
+      
+      {/* Spreadsheet Content */}
+      <div className="flex flex-col font-mono text-[10px]">
+        {[0, 1, 2].map((row) => (
+          <div key={row} className="flex border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+            {[0, 1, 2].map((col) => {
+              const wordIdx = row * 3 + col;
+              const word = words[wordIdx] || (wordIdx === 8 ? '####' : '');
+              return (
+                <div key={col} className="flex-1 px-1 py-2 border-r border-white/5 last:border-0 truncate text-gray-400 relative h-8 flex items-center justify-center">
+                  <span 
+                    className="static-word inline-block text-center opacity-0 group-hover/static:opacity-100 group-hover/static:translate-y-0 group-hover/static:translate-x-0 group-hover/static:animate-stale-jitter"
+                    style={{ 
+                      transition: `all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) ${wordIdx * 0.03}s`,
+                      transform: wordIdx % 2 === 0 ? 'translateY(10px)' : 'translateX(-10px)'
+                    }}
+                  >
+                    {word}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      
+      {/* Outdated Label Overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-0 group-hover/static:opacity-100 flex items-center justify-center transition-opacity duration-300">
+        <div className="bg-red-600/10 backdrop-blur-[0.5px] border border-red-500/30 px-3 py-1 text-[8px] text-red-500/70 font-bold rotate-12 tracking-[0.2em] uppercase">
+          Static Report
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default function App() {
+  const { t, i18n } = useTranslation();
+  const [lang, setLang] = useState(i18n.language || 'es');
+  const [revealManual, setRevealManual] = useState(false);
+  const [resetVisibility, setResetVisibility] = useState(false);
+  
+  const [form, setForm] = useState({
+    name: '', company: '', whatsapp: '', email: '', industry: '', goal: '', message: '', website: ''
+  });
+  const [status, setStatus] = useState('idle');
+  const [isLoaderComplete, setIsLoaderComplete] = useState(false);
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
+  const [showProjects, setShowProjects] = useState(false);
+  const [showImpact, setShowImpact] = useState(false);
+  const diagnosticRef = useRef<HTMLElement>(null);
+  const comparisonRef = useRef<HTMLElement>(null);
+  const projectsRef = useRef<HTMLElement>(null);
+  const impactRef = useRef<HTMLDivElement>(null);
+  const processRef = useRef<HTMLElement>(null);
+  const protocolScrollRef = useRef<HTMLDivElement>(null);
+
+
+  const TOTAL_PROTOCOL_CARDS = 4;
+  const [activeCard, setActiveCard] = React.useState(0);
+  const touchStartX = React.useRef(0);
+
+  const goToCard = (idx: number) => {
+    if (!protocolScrollRef.current) return;
+    const clamped = Math.max(0, Math.min(idx, TOTAL_PROTOCOL_CARDS - 1));
+    setActiveCard(clamped);
+    const card = protocolScrollRef.current.children[clamped] as HTMLElement;
+    if (!card) return;
+    const gap = 32; // gap-8
+    const offset = clamped * (card.offsetWidth + gap);
+    protocolScrollRef.current.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+    protocolScrollRef.current.style.transform = `translate3d(-${offset}px, 0, 0)`;
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const delta = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(delta) > 40) goToCard(delta > 0 ? activeCard + 1 : activeCard - 1);
+  };
+
+
+
+
+
+
+  useEffect(() => {
+    if (isLoaderComplete) {
+      document.body.style.overflowY = '';
+    } else {
+      // Only lock vertical scroll; overflow-x:clip stays from CSS
+      document.body.style.overflowY = 'hidden';
+    }
+    return () => { document.body.style.overflowY = ''; };
+  }, [isLoaderComplete]);
+
+
+
+  // On every (re)load: disable browser scroll-restore and jump to top
+  useEffect(() => {
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    // Force scroll to top before loader finishes so animation always plays from start
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    const diagnosticObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) setShowDiagnostic(true);
+    }, { threshold: 0.2 });
+
+    const comparisonObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) setShowComparison(true);
+    }, { threshold: 0.2 });
+
+    const projectsObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) setShowProjects(true);
+    }, { threshold: 0 });
+
+    const impactObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) setShowImpact(true);
+    }, { threshold: 0.1 });
+
+    if (diagnosticRef.current) diagnosticObserver.observe(diagnosticRef.current);
+    if (comparisonRef.current) comparisonObserver.observe(comparisonRef.current);
+    if (projectsRef.current) projectsObserver.observe(projectsRef.current);
+    if (impactRef.current) impactObserver.observe(impactRef.current);
+
+    return () => {
+      diagnosticObserver.disconnect();
+      comparisonObserver.disconnect();
+      projectsObserver.disconnect();
+      impactObserver.disconnect();
+    };
+  }, []);
+
+  const SHEETS_WEBHOOK = 'https://script.google.com/macros/s/AKfycbzAjrczJVoIaI5VI8Jbe2SUwDZ5Uxy-5L9fkmQKLIeiQDSwAGGwP36YXBgBeuTy81dt/exec';
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (form.website) return; // honeypot anti-spam
+    setStatus('loading');
+
+    const params = new URLSearchParams();
+    Object.entries({ ...form, lang }).forEach(([k, v]) => params.append(k, String(v)));
+    const sheetUrl = `${SHEETS_WEBHOOK}?${params.toString()}`;
+
+    // Image pixel ping — bypasses CORS & follows Google Script redirects natively
+    const img = new Image();
+    img.onload = img.onerror = () => {
+      setStatus('success');
+      setForm({ name: '', company: '', whatsapp: '', email: '', industry: '', goal: '', message: '', website: '' });
+    };
+    img.src = sheetUrl;
+
+    // Fire-and-forget to Railway (best effort)
+    fetch('https://vantasolutions-production.up.railway.app/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...form, lang }),
+    }).catch(() => {});
+  };
+
+
+
+
+
+  const toggleLang = () => {
+    const newLang = lang === 'es' ? 'en' : 'es';
+    i18n.changeLanguage(newLang);
+    setLang(newLang);
+  };
+
+  return (
+    <>
+      <TypographicLoader onComplete={() => setIsLoaderComplete(true)} />
+      
+      <div className={`transition-opacity duration-1000 ${isLoaderComplete ? 'opacity-100' : 'opacity-0'}`}>
+<div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+<div className="parallax-shape absolute -top-20 -left-20 w-[600px] h-[600px] bg-violet-600 rounded-full blur-[150px]"></div>
+<div className="parallax-shape absolute top-1/2 -right-40 w-[500px] h-[500px] bg-blue-600 rounded-full blur-[150px]"></div>
+<div className="parallax-shape absolute -bottom-40 left-1/3 w-[700px] h-[700px] bg-indigo-900 rounded-full blur-[150px]"></div>
+<div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] mix-blend-overlay"></div>
+</div>
+<nav className="fixed w-full z-50 top-0 backdrop-blur-xl bg-black/40 border-b border-white/5">
+<div className="w-full px-6 lg:px-12">
+<div className="flex items-center justify-between h-24">
+<div className="shrink-0 flex items-center gap-3 cursor-pointer group">
+<VantaLogo className="h-14 w-auto" />
+</div>
+<div className="hidden md:block">
+<div className="ml-10 flex items-baseline space-x-12">
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#manifesto">{t('nav.manifesto')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#hero">{t('nav.hero')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#pain-points">{t('nav.pain_points')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#command">{t('nav.command')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#projects">Proyectos<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-base font-medium transition-colors relative group" href="#contact">Contáctanos<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+</div>
+</div>
+<div className="hidden md:flex items-center gap-6">
+<button onClick={toggleLang} className="bg-violet-600/10 hover:bg-violet-600/20 text-white px-4 py-2 rounded-full border border-violet-500/30 text-xs font-bold transition-all flex items-center justify-center min-w-[44px] shadow-lg shadow-violet-500/10 active:scale-95">
+  {lang === 'es' ? 'EN' : 'ES'}
+</button>
+<a href="https://wa.me/524494401613?text=Hola%2C%20me%20interesa%20agendar%20una%20cita%20con%20Vanta%20Solutions" target="_blank" rel="noopener noreferrer" className="btn-premium-nav px-10 py-4 text-white rounded-full text-base font-bold shadow-2xl tracking-wide uppercase inline-flex items-center justify-center">
+                    {t('nav.contact')}
+                </a>
+</div>
+</div>
+</div>
+</nav>
+
+<section className="py-32 relative overflow-hidden bg-[#050505] flex items-center justify-center min-h-screen" id="manifesto">
+  <div className="absolute inset-0 bg-grid-pattern opacity-[0.05] pointer-events-none"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.05),transparent_70%)] pointer-events-none"></div>
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full manifesto-container mt-24">
+  <div className={`hud-corner tl ${isLoaderComplete ? 'opacity-100 scale-100' : 'opacity-0 scale-90'} transition-all duration-700 delay-500`}></div>
+  <div className={`hud-corner tr ${isLoaderComplete ? 'opacity-100 scale-100' : 'opacity-0 scale-90'} transition-all duration-700 delay-500`}></div>
+  <div className={`hud-corner bl ${isLoaderComplete ? 'opacity-100 scale-100' : 'opacity-0 scale-90'} transition-all duration-700 delay-500`}></div>
+  <div className={`hud-corner br ${isLoaderComplete ? 'opacity-100 scale-100' : 'opacity-0 scale-90'} transition-all duration-700 delay-500`}></div>
+<div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div className="lg:col-span-4 relative group">
+<p className={`text-xl md:text-2xl text-gray-400 font-light leading-relaxed relative flashlight-text ${isLoaderComplete ? 'cinematic-fade-up' : 'opacity-0'}`} style={{animationDelay: '0.4s'}}>
+                    {t('manifesto.line1')}
+                    <span className="text-white font-medium">{t('manifesto.line2')}</span>
+</p>
+</div>
+      <div className="lg:col-span-8 text-right relative z-20">
+        <h2 className="font-display text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] uppercase text-white mb-6" style={{ minHeight: '2em' }}>
+          {isLoaderComplete && (
+            <>
+              <Typewriter text={t('manifesto.line3')} delay={500} speed={40} /><br />
+              <Typewriter text={t('manifesto.line4')} delay={1500} speed={40} className="manifesto-highlight" />
+            </>
+          )}
+        </h2>
+        <div className={`font-display text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] uppercase text-right w-full block ${isLoaderComplete ? 'cinematic-power' : 'opacity-0 scale-95'}`} style={{filter: 'drop-shadow(0 0 20px rgba(139,92,246,0.6))', animationDelay: '2.8s'}}>
+          <span className="text-white">{t('manifesto.line5')} </span>
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-white via-violet-200 to-gray-400">
+            {t('manifesto.power')}
+          </span>
+        </div>
+        <div className="flex justify-end mt-8">
+          <div className="inline-block relative">
+            <p className={`relative text-xl md:text-2xl text-gray-300 font-light max-w-lg ml-auto text-right border-r-2 border-violet-500 pr-6 mr-4 flashlight-text ${isLoaderComplete ? 'cinematic-fade-up' : 'opacity-0'}`} style={{animationDelay: '4.8s'}}>
+              {t('manifesto.line6')}
+            </p>
           </div>
         </div>
-      </header>
+      </div>
+</div>
+<div className={`mt-24 lg:mt-32 text-center relative flex flex-col items-center transition-opacity duration-1000 ${isLoaderComplete ? 'opacity-100 delay-2000' : 'opacity-0'}`}>
+<a className="group flex items-center gap-2 px-6 py-2 rounded-full border border-white/10 hover:border-violet-500/50 hover:bg-white/5 transition-all duration-300 transform hover:translate-y-1" href="#hero">
+<span className="text-sm font-mono uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">DESCUBRE MÁS</span>
+<span className="material-symbols-outlined text-gray-500 group-hover:text-violet-400 text-lg transition-colors group-hover:translate-y-1 duration-300">arrow_downward</span>
+</a>
+</div>
+</div>
+</section>
+<section className="relative min-h-screen flex items-center pt-24 pb-12 overflow-hidden bg-nebula" id="hero">
+<div className="absolute inset-0 z-0 bg-grid-pattern opacity-[0.1]"></div>
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+<div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+<div className="lg:col-span-7 space-y-10">
+<div className="inline-flex items-center space-x-3 px-5 py-2 rounded-full border border-violet-500/30 bg-violet-500/10 backdrop-blur-xl">
+<span className="flex h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_10px_#3B82F6]"></span>
+<span className="text-xs font-mono font-medium text-violet-300 uppercase tracking-[0.2em]">{t('hero.eyebrow')}</span>
+</div>
+<h1 className="font-display text-6xl sm:text-7xl lg:text-8xl font-bold leading-[0.95] tracking-tighter text-white">
+                    {t('hero.title_main')} <br />
+<span className="gradient-heading italic">{t('hero.title_accent')}</span>
+</h1>
+<p className="text-xl lg:text-2xl text-gray-300 max-w-3xl leading-relaxed font-light">
+                    {t('hero.subtitle')}
+                </p>
+<div className="flex flex-col sm:flex-row gap-6 pt-4">
+<a href="https://wa.me/524494401613?text=Hola%2C%20me%20interesa%20agendar%20una%20cita%20con%20Vanta%20Solutions" target="_blank" rel="noopener noreferrer" className="btn-primary-gradient text-white px-10 py-5 rounded-full text-lg font-bold flex items-center justify-center gap-3">
+<span>{t('hero.cta_primary')}</span>
+<span className="material-symbols-outlined text-xl">event_available</span>
+</a>
+<button className="glass-panel text-white px-10 py-5 rounded-full text-lg font-medium flex items-center justify-center gap-3 border-white/20">
+<span>{t('hero.cta_secondary')}</span>
+<span className="material-symbols-outlined">data_exploration</span>
+</button>
+</div>
+<div className="pt-4 border-t border-white/5">
+<ul className="space-y-3">
+<li className="flex items-center gap-3 text-gray-400">
+<span className="material-symbols-outlined text-green-400 text-sm">verified</span>
+<span>{t('hero.bullet1')}</span>
+</li>
+<li className="flex items-center gap-3 text-gray-400">
+<span className="material-symbols-outlined text-green-400 text-sm">verified</span>
+<span>{t('hero.bullet2')}</span>
+</li>
+<li className="flex items-center gap-3 text-gray-400">
+<span className="material-symbols-outlined text-green-400 text-sm">verified</span>
+<span>{t('hero.bullet3')}</span>
+</li>
+</ul>
+</div>
+</div>
+<div className="lg:col-span-5 relative">
+<div className="relative w-full aspect-square flex items-center justify-center transform -rotate-6 transition-all duration-700 ease-out group perspective-1000 animate-float-slow">
+<div className="absolute inset-0 bg-linear-to-br from-white/10 to-transparent rounded-[40px] border border-white/10 backdrop-blur-sm transform rotate-6 scale-90 -z-10"></div>
+<div className="absolute inset-0 bg-linear-to-br from-violet-500/20 to-blue-500/20 rounded-[40px] blur-xl opacity-50 transform translate-y-4 -z-20"></div>
+<div className="relative z-10 w-full bg-[#0f1115]/95 rounded-[30px] shadow-2xl overflow-visible border border-gray-700/50 backdrop-blur-md">
+<div className="h-10 bg-[#1a1d24] border-b border-gray-800 flex items-center px-4 justify-between rounded-t-[30px]">
+<div className="flex gap-2">
+<div className="h-3 w-3 bg-red-500 rounded-full shadow-[0_0_8px_#ef4444]"></div>
+<div className="h-3 w-3 bg-yellow-500 rounded-full shadow-[0_0_8px_#eab308]"></div>
+<div className="h-3 w-3 bg-green-500 rounded-full shadow-[0_0_8px_#22c55e]"></div>
+</div>
+<div className="h-1.5 w-32 bg-gray-800 rounded-full relative overflow-hidden">
+  <div className="absolute inset-0 bg-violet-500/20 animate-[moveProgress_3s_linear_infinite]"></div>
+</div>
+</div>
+<div className="p-6 relative overflow-hidden">
+<div className="absolute top-0 right-0 p-4 opacity-10">
+<span className="material-symbols-outlined text-8xl text-violet-500">terminal</span>
+</div>
+<div className="grid grid-cols-2 gap-4 mb-6 relative">
+<div className="bg-gray-800/40 p-4 rounded-xl border border-white/5 relative group/card backdrop-blur-sm overflow-hidden cursor-help">
+<div className="absolute inset-0 bg-violet-600/10 backdrop-blur-md opacity-0 group-hover/card:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-4 text-center z-20">
+  <span className="text-[10px] font-bold text-violet-400 mb-1 tracking-widest uppercase">DETAIL_REPORT</span>
+  <p className="text-[11px] leading-tight text-white font-medium">{t('hero.card1_desc')}</p>
+</div>
+<div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-500 to-transparent opacity-50"></div>
+<div className="flex items-center justify-between mb-2">
+<span className="text-[10px] text-gray-400 font-mono uppercase tracking-wider">{t('hero.card1_eyebrow')}</span>
+<span className="material-symbols-outlined text-green-400 text-sm animate-pulse">query_stats</span>
+</div>
+<div className="text-3xl font-bold text-white mb-1 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">{t("hero.card1_value")}</div>
+<div className="h-1 w-full bg-gray-700/50 rounded-full overflow-hidden">
+<div className="h-full bg-green-400 w-[85%] rounded-full shadow-[0_0_10px_#4ade80] animate-grow-x" style={{animationDelay: '0.5s'}}></div>
+</div>
+<div className="mt-2 text-[10px] text-green-400/80 font-mono flex items-center gap-1">
+  <span className="w-1 h-1 bg-green-400 rounded-full"></span>
+  {t('hero.card1_label')}
+</div>
+</div>
+<div className="bg-gray-800/40 p-4 rounded-xl border border-white/5 relative group/card backdrop-blur-sm overflow-hidden cursor-help">
+<div className="absolute inset-0 bg-red-600/10 backdrop-blur-md opacity-0 group-hover/card:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-4 text-center z-20">
+  <span className="text-[10px] font-bold text-red-500 mb-1 tracking-widest uppercase">TECHNICAL_DEBT_REPORT</span>
+  <p className="text-[11px] leading-tight text-white font-medium">{t('hero.card2_desc')}</p>
+</div>
+<div className="flex items-center justify-between mb-2">
+<span className="text-[10px] text-gray-400 font-mono uppercase tracking-wider">{t('hero.card2_eyebrow')}</span>
+<span className="material-symbols-outlined text-red-500 text-sm">layers_clear</span>
+</div>
+<div className="text-3xl font-bold text-white mb-1 drop-shadow-[0_0_8px_rgba(248,113,113,0.3)]">{t("hero.card2_value")}</div>
+<div className="h-px w-full bg-gray-700/50 mb-2"></div>
+<div className="text-[10px] text-gray-400 font-mono leading-tight italic">
+  {t('hero.card2_label')}
+</div>
+</div>
+</div>
 
-      <main id="top">
-        <section className="hero">
-          <div className="container hero-grid">
-            <div className="hero-copy">
-              <span className="h-eyebrow">{t.hero.eyebrow}</span>
-              <h1 className="h-title">
-                {t.hero.title}
-                <span className="h-accent">.</span>
-              </h1>
-              <p>{t.hero.subtitle}</p>
+<div className="grid grid-cols-2 gap-4 mb-6">
+  <div className="flex flex-col gap-1 p-3 rounded-lg bg-violet-500/5 border border-violet-500/10 hover:border-violet-500/30 transition-all group/stat relative overflow-hidden cursor-help">
+    <div className="absolute inset-0 bg-violet-600/10 backdrop-blur-md opacity-0 group-hover/stat:opacity-100 transition-all duration-300 flex items-center justify-center p-3 text-center z-20">
+      <p className="text-[10px] leading-tight text-white font-medium">{t('hero.card3_desc')}</p>
+    </div>
+    <span className="text-[9px] text-violet-400 font-mono font-bold tracking-tighter transform group-hover/stat:translate-x-1 transition-transform">SYSTEMS_ACTIVE</span>
+    <span className="text-sm font-black text-white tracking-tight italic">5 PRODUCTION SYSTEMS</span>
+  </div>
+  <div className="flex flex-col gap-1 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 hover:border-blue-500/30 transition-all group/stat relative overflow-hidden cursor-help">
+    <div className="absolute inset-0 bg-blue-600/10 backdrop-blur-md opacity-0 group-hover/stat:opacity-100 transition-all duration-300 flex items-center justify-center p-3 text-center z-20">
+      <p className="text-[10px] leading-tight text-white font-medium">{t('hero.card4_desc')}</p>
+    </div>
+    <span className="text-[9px] text-blue-400 font-mono font-bold tracking-tighter transform group-hover/stat:translate-x-1 transition-transform">INTEGRATIONS_CORE</span>
+    <span className="text-sm font-black text-white tracking-tight italic">10+ AUTOMATED FLOWS</span>
+  </div>
+</div>
 
-              <div className="hero-actions">
-                <button type="button" className="btn btn-primary" onClick={() => scrollToId('contact')}>
-                  {t.ctaPrimary}
-                </button>
-                <a className="btn btn-secondary" href={WHATSAPP_LINK_ES} target="_blank" rel="noreferrer">
-                  {t.ctaSecondary}
-                </a>
-              </div>
-              <div className="note" style={{ marginTop: 10 }}>
-                {t.pricingLine}
-              </div>
-            </div>
+<div className="bg-gray-800/20 p-1 rounded-xl border border-white/5 mb-2 relative group/chart overflow-hidden cursor-help transition-all duration-300 hover:border-violet-500/40">
+<div className="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover/chart:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-6 text-center z-30">
+  <span className="text-[10px] font-bold text-violet-400 mb-2 tracking-[0.3em] uppercase">PROJECTION_MODEL_V2</span>
+  <p className="text-xs leading-relaxed text-gray-200 font-medium max-w-[200px]">{t('hero.chart_desc')}</p>
+  <div className="mt-4 flex gap-2">
+    <div className="w-1 h-1 bg-violet-500 rounded-full animate-ping"></div>
+    <span className="text-[8px] text-violet-400 font-mono">CALCULATING_OPTIMIZATION...</span>
+  </div>
+</div>
+<div className="absolute top-3 right-4 z-10 flex gap-2">
+<span className="text-[9px] text-violet-300 font-mono bg-violet-900/40 px-2 py-0.5 rounded border border-violet-500/20 backdrop-blur-sm">{t('hero.chart_label1')}</span>
+</div>
+<div className="absolute top-3 left-4 z-10">
+<span className="text-[10px] text-gray-400 font-mono uppercase tracking-widest">{t('hero.chart_label2')}</span>
+</div>
+<div className="h-32 w-full relative pt-8 chart-container-anim">
+<svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
+<defs>
+<linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="rgba(139, 92, 246, 0.4)"></stop>
+<stop offset="100%" stop-color="rgba(59, 130, 246, 0)"></stop>
+</linearGradient>
+<linearGradient id="lineGradient" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0%" stop-color="#8B5CF6"></stop>
+<stop offset="100%" stop-color="#3B82F6"></stop>
+</linearGradient>
+</defs>
+<path className="chart-area" d="M0,80 C20,75 30,60 50,40 C70,20 80,25 100,10 L100,100 L0,100 Z" fill="url(#chartGradient)"></path>
+<path className="chart-path-anim-loop" d="M0,80 C20,75 30,60 50,40 C70,20 80,25 100,10" fill="none" stroke="url(#lineGradient)" strokeLinecap="round" strokeWidth="2.5"></path>
+</svg>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 
-            <div className="hero-separator" aria-hidden="true" />
+<div className="absolute bottom-0 w-full flex justify-center pb-8 z-20 pointer-events-none">
+<div className="flex flex-col items-center gap-2 animate-bounce-subtle opacity-70">
+<div className="h-16 w-[1px] bg-gradient-to-b from-transparent via-violet-500 to-transparent"></div>
+<div className="code-particle static animate-none text-violet-400 text-[10px]">{t('hero.scroll_down')}</div>
+</div>
+</div>
+</section>
 
-            <aside className="card hero-aside">
-              <div className="hero-logo" aria-hidden="true" />
-              <div className="kpi">
-                <div className="label">{t.aside.kpi1Label}</div>
-                <div className="value">{t.aside.kpi1Value}</div>
-              </div>
-              <div className="kpi">
-                <div className="label">{t.aside.kpi2Label}</div>
-                <div className="value">{t.aside.kpi2Value}</div>
-              </div>
-              <div className="kpi">
-                <div className="label">{t.aside.kpi3Label}</div>
-                <div className="value">{t.aside.kpi3Value}</div>
-              </div>
-              <div className="note">{SIGNATURE}</div>
-            </aside>
-          </div>
-        </section>
 
-        <section id="manifesto" className="section" aria-label="Manifesto">
-          <div className="container">
-            <div className="section-title">
-              <h2 className="h-title" style={{ color: '#fff' }}>{t.manifesto.title}</h2>
-            </div>
-            <div className="card manifesto-card">
-              {t.manifesto.lines.map((line: string) => (
-                <p key={line} style={{ color: '#F2F2F2' }}>{line}</p>
-              ))}
-            </div>
-          </div>
-        </section>
+<section 
+  className="py-32 bg-[#050505] relative overflow-hidden noise-texture" 
+  id="pain-points"
+  ref={diagnosticRef}
+>
+  {/* Technical Background Elements */}
+  <div className="absolute inset-0 bg-technical-grid pointer-events-none"></div>
+  <div className="absolute inset-x-0 top-0 h-px bg-white/5"></div>
+  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-red-500/5 blur-[120px] rounded-full pointer-events-none"></div>
+  
+  {/* Scan Line Effect */}
+  <div className={`diagnostic-scan-line ${showDiagnostic ? 'animate-scan' : ''}`}></div>
 
-        <section id="dna" className="section section-dna" aria-label="Brand DNA">
-          <div className="container">
-            <div className="section-title">
-              <h2 className="h-title">{t.dna.title}</h2>
-              <p>{t.dna.subtitle}</p>
-            </div>
-            <div style={{ height: 64 }} />
-            <div className="dna-balanced">
-              <div className="dna-line" />
-              {t.dna.items.map((item: { title: string; body: string }, index: number) => (
-                <div key={item.title} className="dna-node">
-                  <div className="dna-num">0{index + 1}</div>
-                  <div className="dna-card">
-                    <h3 className="h-title">{item.title}</h3>
-                    <p>{item.body}</p>
-                  </div>
-                  <div className="dna-dot-central" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div className={`text-center mb-24 ${showDiagnostic ? 'reveal-diagnostic' : 'opacity-0'}`}>
+      <span className="text-violet-500 font-mono text-[10px] uppercase tracking-[0.3em] mb-6 block">
+        {t('pain_points.eyebrow')}
+      </span>
+      <h2 className="font-display text-4xl lg:text-6xl font-black text-white mb-8 tracking-tighter leading-tight max-w-3xl mx-auto">
+        {t('pain_points.title_main')} <br /> 
+        {t('pain_points.title_accent').split(' ').slice(0, -1).join(' ')} <span className="text-sintomas transition-all duration-1000 delay-200" style={{ textShadow: showDiagnostic ? '0 0 20px rgba(239, 68, 68, 0.4)' : 'none' }}>{t('pain_points.title_accent').split(' ').pop()}</span>
+      </h2>
+      <p className="text-gray-400 text-lg lg:text-xl max-w-[700px] mx-auto leading-relaxed font-medium">
+        {t('pain_points.subtitle')}
+      </p>
+    </div>
 
-        <section 
-          id="method"
-          className="section section-capabilities" 
-          aria-label="Execution architecture"
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {[
+        { 
+          icon: 'precision_manufacturing', 
+          title1: t('pain_points.card1_title1'), 
+          title2: t('pain_points.card1_title2'), 
+          desc: t('pain_points.card1_desc'),
+          alert: '⚠ NIVEL CRÍTICO DETECTADO'
+        },
+        { 
+          icon: 'lan', 
+          title1: 'Caos', 
+          title2: t('pain_points.card2_title2'), 
+          desc: t('pain_points.card2_desc'),
+          alert: '⚠ FLUJO FRAGMENTADO'
+        },
+        { 
+          icon: 'pivot_table_chart', 
+          title1: t('pain_points.card3_title'), 
+          title2: '', 
+          desc: t('pain_points.card3_desc'),
+          alert: '⚠ INFORMACIÓN DESACTUALIZADA'
+        },
+        { 
+          icon: 'sensors_off', 
+          title1: t('pain_points.card4_title1'), 
+          title2: 'Real', 
+          desc: t('pain_points.card4_desc'),
+          alert: '⚠ VISIBILIDAD COMPROMETIDA'
+        }
+      ].map((card, idx) => (
+        <div 
+          key={idx}
+          className={`card-diagnostic ${idx === 2 ? 'card-static' : ''} p-8 rounded-2xl group relative ${showDiagnostic ? 'revealed' : ''} ${idx === 0 && !revealManual ? 'cursor-pointer select-none' : ''}`}
+          style={{ animationDelay: `${0.6 + (idx * 0.15)}s` }}
+          onClick={() => idx === 0 && setRevealManual(true)}
+          onMouseLeave={() => {
+            if (idx === 0) setRevealManual(false);
+            if (idx === 3) {
+              setResetVisibility(true);
+              setTimeout(() => setResetVisibility(false), 100);
+            }
+          }}
         >
-          <div className="container">
-            <div className="section-title">
-              <h2 className="h-title">{t.capabilities.title}</h2>
-              <p>{t.capabilities.subtitle}</p>
+          {idx === 0 && !revealManual && (
+            <div className="absolute inset-x-0 bottom-0 top-[140px] z-20 reveal-overlay flex flex-col items-center justify-center rounded-b-2xl px-6 text-center">
+              <span className="material-symbols-outlined text-red-500 pulse-red mb-3 scale-125">encrypted</span>
+              <span className="text-[10px] uppercase tracking-[0.25em] text-red-500 font-black pulse-red">Desbloquear Diagnóstico</span>
+              <div className="mt-4 w-12 h-px bg-red-500/30"></div>
             </div>
-            <div style={{ height: 48 }} />
-            <div className="capabilities-grid">
-              {t.capabilities.items.map((item: { title: string; body: string }, index: number) => (
-                <div key={item.title} className="capability-block">
-                  <span className="capability-num">0{index + 1}</span>
-                  <div className="capability-content">
-                    <h3 className="h-title">{item.title}</h3>
-                    <p>{item.body}</p>
-                  </div>
-                </div>
-              ))}
+          )}
+
+          <div className="diagnostic-icon-container">
+            <span className="material-symbols-outlined text-red-500/80 text-2xl font-light">
+              {card.icon}
+            </span>
+          </div>
+          
+          <div className={`${idx === 0 && !revealManual ? 'blur-lg grayscale' : 'blur-0 grayscale-0'} transition-all duration-1000`}>
+            <h3 className="text-xl font-bold text-white mb-4 tracking-tight">
+              {card.title1 && <span className="text-red-400/90">{card.title1} </span>}
+              {card.title2}
+            </h3>
+            
+            <p className="text-sm text-gray-400 leading-relaxed mb-8 font-medium">
+              {idx === 1 ? <DisorderedWords text={card.desc} /> : 
+               idx === 2 ? <StaticWords text={card.desc} /> :
+               idx === 3 ? <VisibilityWords text={card.desc} resetTrigger={resetVisibility} /> : 
+               card.desc}
+            </p>
+
+            <div className="pt-4 border-t border-white/5">
+              <span className="text-[10px] font-mono text-red-500/60 tracking-wider font-bold">
+                {card.alert}
+              </span>
             </div>
           </div>
-        </section>
 
-        <section 
-          id="strategy" 
-          className={`section section-dashboard ${isDashboardActive ? 'is-active' : ''}`} 
-          ref={dashboardRef}
-        >
-          <div className="container">
-              <div className="dashboard-panel">
-                <div className="panel-header">
-                  <span className="panel-label">{t.strategy.title}</span>
-                  <div className="panel-trace-line" />
-                </div>
+          {/* Hover highlight line */}
+          <div className="absolute bottom-0 left-0 h-1 w-0 bg-red-500/40 group-hover:w-full transition-all duration-500 rounded-b-2xl"></div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<section className="py-24 bg-black relative border-y border-white/5 overflow-hidden" id="comparison" ref={comparisonRef}>
+<div className="absolute inset-0 bg-grid-pattern opacity-[0.05]"></div>
+
+{/* Evolution Traverse Line */}
+{showComparison && <div className="evolution-traverse-line animate-traverse" />}
+
+<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+<div className={`text-center mb-20 transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${showComparison ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-5 blur-sm'}`}>
+<p className="text-violet-500 font-bold text-xs font-mono uppercase tracking-[0.3em] mb-4">{t('comparison.eyebrow')}</p>
+<h2 className="font-display text-5xl lg:text-7xl font-bold text-white mb-2 leading-tight">{t('comparison.title_main')}</h2>
+<h2 className="font-display text-5xl lg:text-7xl font-bold text-transparent bg-clip-text bg-linear-to-r from-violet-400 via-indigo-400 to-blue-400 mb-8 italic">{t('comparison.title_accent')}</h2>
+<p className="text-gray-400 max-w-2xl mx-auto text-lg font-light leading-relaxed">{t('comparison.subtitle')}</p>
+</div>
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-stretch">
+{/* Left Side: Obsolete Agency */}
+<div className={`comparison-card-obsolete rounded-3xl p-10 flex flex-col transition-all duration-1000 ${showComparison ? 'animate-dim-sync' : 'opacity-0 translate-x-[-15px]'}`}>
+<div className="mb-10">
+<div className="flex items-center gap-3 mb-3">
+<span className="material-symbols-outlined text-gray-600 text-xl">group</span>
+<h3 className="text-xl font-bold text-gray-500 uppercase tracking-wider">{t('comparison.agencia')}</h3>
+</div>
+<p className="text-gray-400 text-sm font-medium italic">{t('comparison.agencia_subtitle')}</p>
+</div>
+<div className="h-px w-full bg-white/5 mb-10"></div>
+<ul className="space-y-8 grow">
+{[1, 2, 3, 4].map((num, i) => (
+<li key={num} 
+    className={`flex gap-5 transition-all duration-700`}
+    style={{ transitionDelay: `${0.1 + i * 0.1}s`, opacity: showComparison ? 1 : 0, transform: showComparison ? 'translateX(0)' : 'translateX(-15px)' }}>
+<div className="bg-red-500/10 text-red-500 w-6 h-6 rounded flex items-center justify-center shrink-0 mt-0.5 border border-red-500/20">
+<span className="material-symbols-outlined text-[14px] font-bold">close</span>
+</div>
+<div>
+<strong className="text-gray-300 block mb-1 text-base font-semibold">{t(`comparison.agencia_item${num}_title`)}</strong>
+<span className="text-xs text-gray-500 leading-relaxed font-light">{t(`comparison.agencia_item${num}_desc`)}</span>
+</div>
+</li>
+))}
+</ul>
+</div>
+
+{/* Right Side: Vanta Evolution */}
+<div className={`comparison-card-evolution rounded-3xl p-10 flex flex-col shadow-2xl transition-all duration-1000 delay-300 ${showComparison ? 'scale-100 animate-bright-sync' : 'opacity-0 scale-[0.97] translateY-[25px]'}`}>
+<div className="mb-10 flex justify-between items-center">
+<div>
+<div className="flex items-center gap-4 mb-3">
+<VantaLogo className="w-10 h-10" />
+<h3 className="text-3xl font-bold text-white tracking-tight">{t('comparison.vanta')}</h3>
+</div>
+<p className="text-violet-300/60 text-sm font-medium">{t('comparison.vanta_subtitle')}</p>
+</div>
+<div className="badge-premium-recommended">
+{t('comparison.vanta_badge')}
+</div>
+</div>
+
+<ul className="space-y-5 grow">
+{[
+{ id: 1, icon: 'all_inclusive' },
+{ id: 2, icon: 'architecture' },
+{ id: 3, icon: 'developer_board' },
+{ id: 4, icon: 'query_stats' }
+].map((item, i) => (
+<li key={item.id} 
+    className="vanta-comparison-item group/item"
+    style={{ 
+        animation: showComparison ? `premium-reveal-right 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards` : 'none',
+        animationDelay: `${0.5 + i * 0.15}s`,
+        opacity: 0 
+    }}>
+<div className="active-micro-indicator"></div>
+<div className="flex gap-6">
+<div className="bg-violet-500/10 text-violet-400 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 group-hover/item:bg-violet-500/20 transition-colors border border-violet-500/10">
+<span className="material-symbols-outlined text-xl">{item.icon}</span>
+</div>
+<div>
+<strong className="text-white block mb-1.5 text-base tracking-tight">{t(`comparison.vanta_item${item.id}_title`)}</strong>
+<p className="text-sm text-gray-400 leading-relaxed font-light">{t(`comparison.vanta_item${item.id}_desc`)}</p>
+</div>
+</div>
+</li>
+))}
+</ul>
+</div>
+</div>
+</div>
+</section>
+
+
+<section className="relative py-20 lg:py-28 bg-[#050112]" id="process" ref={processRef}>
+<div className="absolute inset-0 z-0 pointer-events-none">
+<div className="absolute top-1/2 left-1/4 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[120px]"></div>
+<div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px]"></div>
+</div>
+<div className="relative z-10 w-full">
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div className="text-center mb-10 lg:mb-16">
+<h2 className="font-display text-5xl lg:text-7xl font-bold text-white mb-4">El <span className="gradient-heading">{t('process.title_accent')}</span></h2>
+<p className="text-gray-400 text-lg max-w-2xl mx-auto">{t('process.subtitle')}</p>
+</div>
+</div>
+<div className="relative w-full overflow-hidden">
+<div
+  className="protocol-scroll-container flex flex-nowrap gap-8 pb-2 px-4 sm:px-6 lg:px-8"
+  ref={protocolScrollRef}
+  onTouchStart={onTouchStart}
+  onTouchEnd={onTouchEnd}
+>
+<div className="flip-card snap-center h-[420px] lg:h-[500px]">
+<div className="flip-card-inner h-full">
+<div className="flip-card-front bg-[#0a0514]/80 backdrop-blur-xl border border-violet-500/30 p-6 md:p-8 lg:p-10 flex flex-col shadow-[0_0_40px_-10px_rgba(139,92,246,0.15)] relative">
+<div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-50"></div>
+<div className="flex justify-between items-start mb-8">
+<span className="font-display font-bold text-6xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 opacity-30">01</span>
+<div className="w-16 h-16 rounded-2xl bg-linear-to-br from-violet-600/20 to-purple-900/20 border border-violet-500/20 flex items-center justify-center">
+<span className="material-symbols-outlined text-violet-400 text-3xl">search_check</span>
+</div>
+</div>
+<h3 className="text-3xl font-display font-bold text-white mb-4">{t('process.step1_title')}</h3>
+<p className="text-gray-400 text-base leading-relaxed mb-8 grow">
+                    {t('process.step1_desc')}
+                </p>
+<div className="mt-auto pt-6 border-t border-white/5">
+<p className="text-xs text-violet-400 font-mono uppercase tracking-widest mb-3">{t('process.step1_deliv_lbl')}</p>
+<div className="flex flex-wrap gap-2">
+<span className="text-xs font-medium text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">{t('process.step1_deliv1')}</span>
+<span className="text-xs font-medium text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">{t('process.step1_deliv2')}</span>
+</div>
+</div>
+</div>
+<div className="flip-card-back bg-black/90 backdrop-blur-xl border border-violet-500/50 p-6 md:p-8 lg:p-10 flex flex-col shadow-[inset_0_0_30px_rgba(139,92,246,0.1)] code-bg-pattern neon-border-pulse">
+<div className="flex items-center justify-between mb-6 border-b border-violet-500/30 pb-4">
+<div className="flex items-center gap-2">
+<div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+<span className="font-mono text-xs text-violet-300 uppercase tracking-widest">System_Status: ACTIVE</span>
+</div>
+<span className="font-mono text-xs text-gray-500">ID: #DSC-01</span>
+</div>
+<div className="space-y-6 font-mono text-sm">
+<div>
+<h4 className="text-violet-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-violet-500 pl-2">Tecnologías de Análisis</h4>
+<div className="grid grid-cols-2 gap-2 text-gray-300">
+<span className="bg-violet-900/20 px-2 py-1 rounded border border-violet-500/20">Datadog</span>
+<span className="bg-violet-900/20 px-2 py-1 rounded border border-violet-500/20">SonarQube</span>
+<span className="bg-violet-900/20 px-2 py-1 rounded border border-violet-500/20">Figma Dev</span>
+<span className="bg-violet-900/20 px-2 py-1 rounded border border-violet-500/20">Jira</span>
+</div>
+</div>
+<div>
+<h4 className="text-violet-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-violet-500 pl-2">Est. Timeline</h4>
+<div className="flex items-center gap-2 text-white">
+<span className="material-symbols-outlined text-sm">timer</span>
+<span>2 - 3 Semanas</span>
+</div>
+</div>
+<div>
+<h4 className="text-green-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-green-500 pl-2">Criterios de Éxito</h4>
+<ul className="space-y-2 text-gray-400 text-xs">
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> Mapeo completo de deuda técnica
+                            </li>
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> Definición de KPIs base
+                            </li>
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> Aprobación de alcance técnico
+                            </li>
+</ul>
+</div>
+</div>
+<div className="mt-auto pt-4 border-t border-violet-500/30 flex justify-between items-center">
+<span className="text-[10px] text-gray-500">Vanta Protocol v2.4</span>
+<span className="material-symbols-outlined text-violet-500 animate-pulse">terminal</span>
+</div>
+</div>
+</div>
+</div>
+<div className="flip-card snap-center h-[420px] lg:h-[500px]">
+<div className="flip-card-inner h-full">
+<div className="flip-card-front bg-[#0a0514]/80 backdrop-blur-xl border border-blue-500/30 p-6 md:p-8 lg:p-10 flex flex-col shadow-[0_0_40px_-10px_rgba(59,130,246,0.15)] relative">
+<div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
+<div className="flex justify-between items-start mb-8">
+<span className="font-display font-bold text-6xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 opacity-30">02</span>
+<div className="w-16 h-16 rounded-2xl bg-linear-to-br from-blue-600/20 to-cyan-900/20 border border-blue-500/20 flex items-center justify-center">
+<span className="material-symbols-outlined text-blue-400 text-3xl">architecture</span>
+</div>
+</div>
+<h3 className="text-3xl font-display font-bold text-white mb-4">{t('process.step2_title')}</h3>
+<p className="text-gray-400 text-base leading-relaxed mb-8 grow">
+                    {t('process.step2_desc')}
+                </p>
+<div className="mt-auto pt-6 border-t border-white/5">
+<p className="text-xs text-blue-400 font-mono uppercase tracking-widest mb-3">{t('process.step1_deliv_lbl')}</p>
+<div className="flex flex-wrap gap-2">
+<span className="text-xs font-medium text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">{t('process.step2_deliv1')}</span>
+<span className="text-xs font-medium text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">{t('process.step2_deliv2')}</span>
+</div>
+</div>
+</div>
+<div className="flip-card-back bg-black/90 backdrop-blur-xl border border-blue-500/50 p-6 md:p-8 lg:p-10 flex flex-col shadow-[inset_0_0_30px_rgba(59,130,246,0.1)] code-bg-pattern neon-border-pulse" style={{animationDelay: '0.5s'}}>
+<div className="flex items-center justify-between mb-6 border-b border-blue-500/30 pb-4">
+<div className="flex items-center gap-2">
+<div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+<span className="font-mono text-xs text-blue-300 uppercase tracking-widest">Blueprint_Mode</span>
+</div>
+<span className="font-mono text-xs text-gray-500">ID: #ARC-02</span>
+</div>
+<div className="space-y-6 font-mono text-sm">
+<div>
+<h4 className="text-blue-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-blue-500 pl-2">Core Stack Design</h4>
+<div className="grid grid-cols-2 gap-2 text-gray-300">
+<span className="bg-blue-900/20 px-2 py-1 rounded border border-blue-500/20">AWS Lambda</span>
+<span className="bg-blue-900/20 px-2 py-1 rounded border border-blue-500/20">PostgreSQL</span>
+<span className="bg-blue-900/20 px-2 py-1 rounded border border-blue-500/20">Redis</span>
+<span className="bg-blue-900/20 px-2 py-1 rounded border border-blue-500/20">Docker</span>
+</div>
+</div>
+<div>
+<h4 className="text-blue-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-blue-500 pl-2">Est. Timeline</h4>
+<div className="flex items-center gap-2 text-white">
+<span className="material-symbols-outlined text-sm">timer</span>
+<span>3 - 4 Semanas</span>
+</div>
+</div>
+<div>
+<h4 className="text-green-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-green-500 pl-2">Criterios de Éxito</h4>
+<ul className="space-y-2 text-gray-400 text-xs">
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> Diagrama ER aprobado
+                            </li>
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> Estrategia de Microservicios
+                            </li>
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> Protocolos de Seguridad definidos
+                            </li>
+</ul>
+</div>
+</div>
+<div className="mt-auto pt-4 border-t border-blue-500/30 flex justify-between items-center">
+<span className="text-[10px] text-gray-500">Vanta Protocol v2.4</span>
+<span className="material-symbols-outlined text-blue-500 animate-spin-slow">settings_suggest</span>
+</div>
+</div>
+</div>
+</div>
+<div className="flip-card snap-center h-[420px] lg:h-[500px]">
+<div className="flip-card-inner h-full">
+<div className="flip-card-front bg-[#0a0514]/80 backdrop-blur-xl border border-indigo-500/30 p-6 md:p-8 lg:p-10 flex flex-col shadow-[0_0_40px_-10px_rgba(99,102,241,0.15)] relative">
+<div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"></div>
+<div className="flex justify-between items-start mb-8">
+<span className="font-display font-bold text-6xl text-transparent bg-clip-text bg-linear-to-b from-white to-white/10 opacity-30">03</span>
+<div className="w-16 h-16 rounded-2xl bg-linear-to-br from-indigo-600/20 to-violet-900/20 border border-indigo-500/20 flex items-center justify-center">
+<span className="material-symbols-outlined text-indigo-400 text-3xl">terminal</span>
+</div>
+</div>
+<h3 className="text-3xl font-display font-bold text-white mb-4">{t('process.step3_title')}</h3>
+<p className="text-gray-400 text-base leading-relaxed mb-8 grow">
+                    Escuadrones de ingeniería ejecutando código limpio y modular. {t('process.step3_title')} iterativo centrado en la lógica de negocio crítica.
+                </p>
+<div className="mt-auto pt-6 border-t border-white/5">
+<p className="text-xs text-indigo-400 font-mono uppercase tracking-widest mb-3">{t('process.step1_deliv_lbl')}</p>
+<div className="flex flex-wrap gap-2">
+<span className="text-xs font-medium text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">{t('process.step3_deliv1')}</span>
+<span className="text-xs font-medium text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">{t('process.step3_deliv2')}</span>
+</div>
+</div>
+</div>
+<div className="flip-card-back bg-black/90 backdrop-blur-xl border border-indigo-500/50 p-6 md:p-8 lg:p-10 flex flex-col shadow-[inset_0_0_30px_rgba(99,102,241,0.1)] code-bg-pattern neon-border-pulse" style={{animationDelay: '1s'}}>
+<div className="flex items-center justify-between mb-6 border-b border-indigo-500/30 pb-4">
+<div className="flex items-center gap-2">
+<div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+<span className="font-mono text-xs text-indigo-300 uppercase tracking-widest">Build_Sequence</span>
+</div>
+<span className="font-mono text-xs text-gray-500">ID: #DEV-03</span>
+</div>
+<div className="space-y-6 font-mono text-sm">
+<div>
+<h4 className="text-indigo-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-indigo-500 pl-2">Languages &amp; Frameworks</h4>
+<div className="grid grid-cols-2 gap-2 text-gray-300">
+<span className="bg-indigo-900/20 px-2 py-1 rounded border border-indigo-500/20">Rust / Go</span>
+<span className="bg-indigo-900/20 px-2 py-1 rounded border border-indigo-500/20">React / Next</span>
+<span className="bg-indigo-900/20 px-2 py-1 rounded border border-indigo-500/20">GraphQL</span>
+<span className="bg-indigo-900/20 px-2 py-1 rounded border border-indigo-500/20">Tailwind</span>
+</div>
+</div>
+<div>
+<h4 className="text-indigo-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-indigo-500 pl-2">Est. Timeline</h4>
+<div className="flex items-center gap-2 text-white">
+<span className="material-symbols-outlined text-sm">timer</span>
+<span>6 - 12 Semanas</span>
+</div>
+</div>
+<div>
+<h4 className="text-green-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-green-500 pl-2">Criterios de Éxito</h4>
+<ul className="space-y-2 text-gray-400 text-xs">
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> Test Coverage &gt; 85%
+                            </li>
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> Performance &lt; 100ms
+                            </li>
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> CI/CD Pipelines Activos
+                            </li>
+</ul>
+</div>
+</div>
+<div className="mt-auto pt-4 border-t border-indigo-500/30 flex justify-between items-center">
+<span className="text-[10px] text-gray-500">Vanta Protocol v2.4</span>
+<span className="material-symbols-outlined text-indigo-500">developer_board</span>
+</div>
+</div>
+</div>
+</div>
+<div className="flip-card snap-center h-[500px]">
+<div className="flip-card-inner h-full">
+<div className="flip-card-front bg-[#0a0514]/80 backdrop-blur-xl border border-cyan-500/30 p-8 md:p-10 flex flex-col shadow-[0_0_40px_-10px_rgba(6,182,212,0.15)] relative">
+<div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
+<div className="flex justify-between items-start mb-8">
+<span className="font-display font-bold text-6xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 opacity-30">04</span>
+<div className="w-16 h-16 rounded-2xl bg-linear-to-br from-cyan-600/20 to-blue-900/20 border border-cyan-500/20 flex items-center justify-center">
+<span className="material-symbols-outlined text-cyan-400 text-3xl">rocket_launch</span>
+</div>
+</div>
+<h3 className="text-3xl font-display font-bold text-white mb-4">{t('process.step4_title')}</h3>
+<p className="text-gray-400 text-base leading-relaxed mb-8 grow">
+                    {t('process.step4_desc')}
+                </p>
+<div className="mt-auto pt-6 border-t border-white/5">
+<p className="text-xs text-cyan-400 font-mono uppercase tracking-widest mb-3">{t('process.step1_deliv_lbl')}</p>
+<div className="flex flex-wrap gap-2">
+<span className="text-xs font-medium text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">{t('process.step4_deliv1')}</span>
+<span className="text-xs font-medium text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">{t('process.step4_deliv2')}</span>
+</div>
+</div>
+</div>
+<div className="flip-card-back bg-black/90 backdrop-blur-xl border border-cyan-500/50 p-8 md:p-10 flex flex-col shadow-[inset_0_0_30px_rgba(6,182,212,0.1)] code-bg-pattern neon-border-pulse" style={{animationDelay: '1.5s'}}>
+<div className="flex items-center justify-between mb-6 border-b border-cyan-500/30 pb-4">
+<div className="flex items-center gap-2">
+<div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
+<span className="font-mono text-xs text-cyan-300 uppercase tracking-widest">Launch_Control</span>
+</div>
+<span className="font-mono text-xs text-gray-500">ID: #DPLY-04</span>
+</div>
+<div className="space-y-6 font-mono text-sm">
+<div>
+<h4 className="text-cyan-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-cyan-500 pl-2">Infraestructura</h4>
+<div className="grid grid-cols-2 gap-2 text-gray-300">
+<span className="bg-cyan-900/20 px-2 py-1 rounded border border-cyan-500/20">Kubernetes</span>
+<span className="bg-cyan-900/20 px-2 py-1 rounded border border-cyan-500/20">Terraform</span>
+<span className="bg-cyan-900/20 px-2 py-1 rounded border border-cyan-500/20">CloudWatch</span>
+<span className="bg-cyan-900/20 px-2 py-1 rounded border border-cyan-500/20">ELB</span>
+</div>
+</div>
+<div>
+<h4 className="text-cyan-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-cyan-500 pl-2">Est. Timeline</h4>
+<div className="flex items-center gap-2 text-white">
+<span className="material-symbols-outlined text-sm">timer</span>
+<span>1 - 2 Semanas</span>
+</div>
+</div>
+<div>
+<h4 className="text-green-400 mb-2 uppercase text-xs tracking-wider border-l-2 border-green-500 pl-2">Criterios de Éxito</h4>
+<ul className="space-y-2 text-gray-400 text-xs">
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> Zero-downtime deployment
+                            </li>
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> Load Testing Superado
+                            </li>
+<li className="flex items-start gap-2">
+<span className="text-green-500 mt-0.5">✓</span> Handover a Ops Team
+                            </li>
+</ul>
+</div>
+</div>
+<div className="mt-auto pt-4 border-t border-cyan-500/30 flex justify-between items-center">
+<span className="text-[10px] text-gray-500">Vanta Protocol v2.4</span>
+<span className="material-symbols-outlined text-cyan-500 animate-bounce">rocket_launch</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+{/* ─── PREV / NEXT navigation ─────────────────────────────────── */}
+<div className="mt-10 flex items-center justify-center gap-0 select-none">
+  <button
+    onClick={() => goToCard(activeCard - 1)}
+    disabled={activeCard === 0}
+    className="text-sm font-mono tracking-widest uppercase text-gray-400 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors duration-200 px-6 py-2"
+  >
+    ← PREV
+  </button>
+  <div className="w-px h-5 bg-white/20" />
+  <button
+    onClick={() => goToCard(activeCard + 1)}
+    disabled={activeCard === TOTAL_PROTOCOL_CARDS - 1}
+    className="text-sm font-mono tracking-widest uppercase text-gray-400 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors duration-200 px-6 py-2"
+  >
+    NEXT →
+  </button>
+</div>
+
+</div>
+</div>
+</section>
+
+<section className="py-32 relative overflow-hidden bg-black/60 backdrop-blur-3xl border-y border-white/5" id="stack">
+<div className="absolute inset-0 bg-grid-pattern opacity-[0.03]"></div>
+<div className="absolute inset-0 bg-linear-to-br from-indigo-900/10 via-transparent to-purple-900/10 z-0"></div>
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+<div className="text-center mb-24 relative">
+<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-indigo-500/20 blur-[100px] pointer-events-none"></div>
+<span className="inline-block py-1 px-3 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-mono mb-4 tracking-wider">{t('stack.eyebrow1')}</span>
+<p className="text-violet-400 text-sm font-medium font-mono uppercase tracking-widest mb-4">{t('stack.eyebrow2')}</p>
+<h2 className="font-display text-5xl lg:text-6xl font-bold text-white mb-6">{t('stack.title_main')} <span className="gradient-heading">{t('stack.title_accent')}</span></h2>
+<p className="text-gray-400 text-lg max-w-2xl mx-auto font-light leading-relaxed">
+                {t('stack.subtitle')}
+            </p>
+</div>
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">
+<div className="tech-card p-6 rounded-2xl flex flex-col items-center justify-center gap-5 group cursor-default">
+<div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors duration-500">
+<span className="material-symbols-outlined text-4xl text-blue-400 tech-icon-glow">data_object</span>
+</div>
+<div className="text-center">
+<h3 className="text-white font-medium mb-1 group-hover:text-blue-300 transition-colors">React.js</h3>
+<p className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">Frontend Core</p>
+</div>
+</div>
+<div className="tech-card p-6 rounded-2xl flex flex-col items-center justify-center gap-5 group cursor-default">
+<div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-yellow-500/10 transition-colors duration-500">
+<span className="material-symbols-outlined text-4xl text-yellow-500 tech-icon-glow">terminal</span>
+</div>
+<div className="text-center">
+<h3 className="text-white font-medium mb-1 group-hover:text-yellow-300 transition-colors">Python</h3>
+<p className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">Data Science</p>
+</div>
+</div>
+<div className="tech-card p-6 rounded-2xl flex flex-col items-center justify-center gap-5 group cursor-default">
+<div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-orange-500/10 transition-colors duration-500">
+<span className="material-symbols-outlined text-4xl text-orange-400 tech-icon-glow">cloud</span>
+</div>
+<div className="text-center">
+<h3 className="text-white font-medium mb-1 group-hover:text-orange-300 transition-colors">AWS</h3>
+<p className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">Cloud Infra</p>
+</div>
+</div>
+<div className="tech-card p-6 rounded-2xl flex flex-col items-center justify-center gap-5 group cursor-default">
+<div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-blue-600/10 transition-colors duration-500">
+<span className="material-symbols-outlined text-4xl text-blue-500 tech-icon-glow">grid_view</span>
+</div>
+<div className="text-center">
+<h3 className="text-white font-medium mb-1 group-hover:text-blue-400 transition-colors">Kubernetes</h3>
+<p className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">Orchestration</p>
+</div>
+</div>
+<div className="tech-card p-6 rounded-2xl flex flex-col items-center justify-center gap-5 group cursor-default">
+<div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors duration-500">
+<span className="material-symbols-outlined text-4xl text-cyan-400 tech-icon-glow">database</span>
+</div>
+<div className="text-center">
+<h3 className="text-white font-medium mb-1 group-hover:text-cyan-300 transition-colors">PostgreSQL</h3>
+<p className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">Relational DB</p>
+</div>
+</div>
+<div className="tech-card p-6 rounded-2xl flex flex-col items-center justify-center gap-5 group cursor-default">
+<div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-red-500/10 transition-colors duration-500">
+<span className="material-symbols-outlined text-4xl text-red-400 tech-icon-glow">memory</span>
+</div>
+<div className="text-center">
+<h3 className="text-white font-medium mb-1 group-hover:text-red-300 transition-colors">Rust</h3>
+<p className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">Systems</p>
+</div>
+</div>
+<div className="tech-card p-6 rounded-2xl flex flex-col items-center justify-center gap-5 group cursor-default">
+<div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-blue-400/10 transition-colors duration-500">
+<span className="material-symbols-outlined text-4xl text-blue-300 tech-icon-glow">deployed_code</span>
+</div>
+<div className="text-center">
+<h3 className="text-white font-medium mb-1 group-hover:text-blue-200 transition-colors">Docker</h3>
+<p className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">Containerization</p>
+</div>
+</div>
+<div className="tech-card p-6 rounded-2xl flex flex-col items-center justify-center gap-5 group cursor-default">
+<div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-pink-500/10 transition-colors duration-500">
+<span className="material-symbols-outlined text-4xl text-pink-400 tech-icon-glow">hub</span>
+</div>
+<div className="text-center">
+<h3 className="text-white font-medium mb-1 group-hover:text-pink-300 transition-colors">GraphQL</h3>
+<p className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">API Query</p>
+</div>
+</div>
+<div className="tech-card p-6 rounded-2xl flex flex-col items-center justify-center gap-5 group cursor-default">
+<div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-orange-600/10 transition-colors duration-500">
+<span className="material-symbols-outlined text-4xl text-orange-500 tech-icon-glow">smart_toy</span>
+</div>
+<div className="text-center">
+<h3 className="text-white font-medium mb-1 group-hover:text-orange-400 transition-colors">TensorFlow</h3>
+<p className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">Machine Learning</p>
+</div>
+</div>
+<div className="tech-card p-6 rounded-2xl flex flex-col items-center justify-center gap-5 group cursor-default">
+<div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-gray-100/10 transition-colors duration-500">
+<span className="material-symbols-outlined text-4xl text-gray-200 tech-icon-glow">layers</span>
+</div>
+<div className="text-center">
+<h3 className="text-white font-medium mb-1 group-hover:text-white transition-colors">Next.js</h3>
+<p className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">React Framework</p>
+</div>
+</div>
+</div>
+<div className="mt-20 flex flex-col sm:flex-row items-center justify-center gap-6">
+<div className="h-px w-24 bg-linear-to-r from-transparent to-white/20"></div>
+<p className="text-xs font-mono text-gray-500 uppercase tracking-widest">
+                {t('stack.footer')}
+            </p>
+<div className="h-px w-24 bg-linear-to-l from-transparent to-white/20"></div>
+</div>
+</div>
+</section>
+<section id="command" className="py-32 relative overflow-hidden bg-[#0a0514]">
+<div className="absolute inset-0 z-0">
+<div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-violet-900/10 via-background-deep to-background-deep opacity-50"></div>
+<div className="absolute inset-0 opacity-20" style={{backgroundImage: 'radial-gradient(rgba(139, 92, 246, 0.2) 1px, transparent 1px)', backgroundSize: '30px 30px'}}></div>
+</div>
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+<div className="flex flex-col lg:flex-row items-end justify-between mb-16 gap-8">
+<div className="lg:max-w-xl">
+<span className="text-blue-500 font-mono text-xs tracking-widest uppercase mb-2 block">{t('catalog.eyebrow')}</span>
+<h2 className="font-display text-5xl lg:text-6xl font-bold text-white mb-4">{t('catalog.title_main')} <span className="gradient-heading">{t('catalog.title_accent')}</span></h2>
+<p className="text-gray-400 text-lg">{t('catalog.subtitle')}</p>
+</div>
+<div className="flex items-center gap-2">
+<span className="flex h-3 w-3 relative">
+<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+<span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+</span>
+<span className="text-xs font-mono text-green-400 tracking-wider">{t('catalog.online')}</span>
+</div>
+</div>
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div className="module-card rounded-xl p-6 group cursor-pointer hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]">
+<div className="flex justify-between items-start mb-6">
+<div className="w-12 h-12 rounded-lg module-icon-container flex items-center justify-center group-hover:bg-violet-500/10 transition-colors">
+<span className="material-symbols-outlined text-violet-400 text-2xl group-hover:scale-110 transition-transform duration-300">conveyor_belt</span>
+</div>
+<div className="flex items-center gap-2">
+<div className="h-1.5 w-1.5 rounded-full bg-green-500 status-indicator"></div>
+<span className="text-[10px] font-mono text-gray-500 uppercase">{t('catalog.status')}</span>
+</div>
+</div>
+<h3 className="text-xl font-bold text-white mb-2 group-hover:text-violet-300 transition-colors">{t('catalog.pos_title')}</h3>
+<p className="text-sm text-gray-400 leading-relaxed mb-4 border-l-2 border-violet-500/20 pl-3 group-hover:border-violet-500 transition-colors">
+                    {t('catalog.pos_desc')}
+                </p>
+<div className="flex flex-wrap gap-2 mt-auto">
+<span className="module-tech-tag px-2 py-1 rounded">React</span>
+<span className="module-tech-tag px-2 py-1 rounded">Node.js</span>
+<span className="module-tech-tag px-2 py-1 rounded">Redis</span>
+</div>
+</div>
+<div className="module-card rounded-xl p-6 group cursor-pointer hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] border-blue-500/20">
+<div className="flex justify-between items-start mb-6">
+<div className="w-12 h-12 rounded-lg module-icon-container flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
+<span className="material-symbols-outlined text-blue-400 text-2xl group-hover:scale-110 transition-transform duration-300">lan</span>
+</div>
+<div className="flex items-center gap-2">
+<div className="h-1.5 w-1.5 rounded-full bg-green-500 status-indicator"></div>
+<span className="text-[10px] font-mono text-gray-500 uppercase">{t('catalog.status')}</span>
+</div>
+</div>
+<h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">{t('catalog.erp_title')}</h3>
+<p className="text-sm text-gray-400 leading-relaxed mb-4 border-l-2 border-blue-500/20 pl-3 group-hover:border-blue-500 transition-colors">
+                    {t('catalog.erp_desc')}
+                </p>
+<div className="flex flex-wrap gap-2 mt-auto">
+<span className="module-tech-tag px-2 py-1 rounded border-blue-500/30 text-blue-300 bg-blue-500/10">Python</span>
+<span className="module-tech-tag px-2 py-1 rounded border-blue-500/30 text-blue-300 bg-blue-500/10">PostgreSQL</span>
+<span className="module-tech-tag px-2 py-1 rounded border-blue-500/30 text-blue-300 bg-blue-500/10">Docker</span>
+</div>
+</div>
+<div className="module-card rounded-xl p-6 group cursor-pointer hover:shadow-[0_0_30px_rgba(236,72,153,0.15)] border-pink-500/20">
+<div className="flex justify-between items-start mb-6">
+<div className="w-12 h-12 rounded-lg module-icon-container flex items-center justify-center group-hover:bg-pink-500/10 transition-colors">
+<span className="material-symbols-outlined text-pink-400 text-2xl group-hover:scale-110 transition-transform duration-300">account_tree</span>
+</div>
+<div className="flex items-center gap-2">
+<div className="h-1.5 w-1.5 rounded-full bg-green-500 status-indicator"></div>
+<span className="text-[10px] font-mono text-gray-500 uppercase">{t('catalog.status')}</span>
+</div>
+</div>
+<h3 className="text-xl font-bold text-white mb-2 group-hover:text-pink-300 transition-colors">{t('catalog.crm_title')}</h3>
+<p className="text-sm text-gray-400 leading-relaxed mb-4 border-l-2 border-pink-500/20 pl-3 group-hover:border-pink-500 transition-colors">
+                    {t('catalog.crm_desc')}
+                </p>
+<div className="flex flex-wrap gap-2 mt-auto">
+<span className="module-tech-tag px-2 py-1 rounded border-pink-500/30 text-pink-300 bg-pink-500/10">Next.js</span>
+<span className="module-tech-tag px-2 py-1 rounded border-pink-500/30 text-pink-300 bg-pink-500/10">GraphQL</span>
+<span className="module-tech-tag px-2 py-1 rounded border-pink-500/30 text-pink-300 bg-pink-500/10">AWS</span>
+</div>
+</div>
+<div className="module-card rounded-xl p-6 group cursor-pointer hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] border-orange-500/20">
+<div className="flex justify-between items-start mb-6">
+<div className="w-12 h-12 rounded-lg module-icon-container flex items-center justify-center group-hover:bg-orange-500/10 transition-colors">
+<span className="material-symbols-outlined text-orange-400 text-2xl group-hover:scale-110 transition-transform duration-300">inventory</span>
+</div>
+<div className="flex items-center gap-2">
+<div className="h-1.5 w-1.5 rounded-full bg-green-500 status-indicator"></div>
+<span className="text-[10px] font-mono text-gray-500 uppercase">{t('catalog.status')}</span>
+</div>
+</div>
+<h3 className="text-xl font-bold text-white mb-2 group-hover:text-orange-300 transition-colors">{t('catalog.stock_title')}</h3>
+<p className="text-sm text-gray-400 leading-relaxed mb-4 border-l-2 border-orange-500/20 pl-3 group-hover:border-orange-500 transition-colors">
+                    {t('catalog.stock_desc')}
+                </p>
+<div className="flex flex-wrap gap-2 mt-auto">
+<span className="module-tech-tag px-2 py-1 rounded border-orange-500/30 text-orange-300 bg-orange-500/10">Go</span>
+<span className="module-tech-tag px-2 py-1 rounded border-orange-500/30 text-orange-300 bg-orange-500/10">gRPC</span>
+<span className="module-tech-tag px-2 py-1 rounded border-orange-500/30 text-orange-300 bg-orange-500/10">Kafka</span>
+</div>
+</div>
+<div className="module-card rounded-xl p-6 group cursor-pointer hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] border-cyan-500/20">
+<div className="flex justify-between items-start mb-6">
+<div className="w-12 h-12 rounded-lg module-icon-container flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
+<span className="material-symbols-outlined text-cyan-400 text-2xl group-hover:scale-110 transition-transform duration-300">event_repeat</span>
+</div>
+<div className="flex items-center gap-2">
+<div className="h-1.5 w-1.5 rounded-full bg-green-500 status-indicator"></div>
+<span className="text-[10px] font-mono text-gray-500 uppercase">{t('catalog.status')}</span>
+</div>
+</div>
+<h3 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">{t('catalog.agenda_title')}</h3>
+<p className="text-sm text-gray-400 leading-relaxed mb-4 border-l-2 border-cyan-500/20 pl-3 group-hover:border-cyan-500 transition-colors">
+                    {t('catalog.agenda_desc')}
+                </p>
+<div className="flex flex-wrap gap-2 mt-auto">
+<span className="module-tech-tag px-2 py-1 rounded border-cyan-500/30 text-cyan-300 bg-cyan-500/10">React Native</span>
+<span className="module-tech-tag px-2 py-1 rounded border-cyan-500/30 text-cyan-300 bg-cyan-500/10">Firebase</span>
+<span className="module-tech-tag px-2 py-1 rounded border-cyan-500/30 text-cyan-300 bg-cyan-500/10">Node.js</span>
+</div>
+</div>
+<div className="module-card rounded-xl p-6 group cursor-pointer hover:shadow-[0_0_30px_rgba(34,197,94,0.15)] border-green-500/20">
+<div className="flex justify-between items-start mb-6">
+<div className="w-12 h-12 rounded-lg module-icon-container flex items-center justify-center group-hover:bg-green-500/10 transition-colors">
+<span className="material-symbols-outlined text-green-400 text-2xl group-hover:scale-110 transition-transform duration-300">support_agent</span>
+</div>
+<div className="flex items-center gap-2">
+<div className="h-1.5 w-1.5 rounded-full bg-green-500 status-indicator"></div>
+<span className="text-[10px] font-mono text-gray-500 uppercase">{t('catalog.status')}</span>
+</div>
+</div>
+<h3 className="text-xl font-bold text-white mb-2 group-hover:text-green-300 transition-colors">{t('catalog.bot_title')}</h3>
+<p className="text-sm text-gray-400 leading-relaxed mb-4 border-l-2 border-green-500/20 pl-3 group-hover:border-green-500 transition-colors">
+                    {t('catalog.bot_desc')}
+                </p>
+<div className="flex flex-wrap gap-2 mt-auto">
+<span className="module-tech-tag px-2 py-1 rounded border-green-500/30 text-green-300 bg-green-500/10">Python</span>
+<span className="module-tech-tag px-2 py-1 rounded border-green-500/30 text-green-300 bg-green-500/10">OpenAI API</span>
+<span className="module-tech-tag px-2 py-1 rounded border-green-500/30 text-green-300 bg-green-500/10">Twilio</span>
+</div>
+</div>
+<div className="module-card rounded-xl p-6 group cursor-pointer hover:shadow-[0_0_30px_rgba(168,85,247,0.15)] border-purple-500/20">
+<div className="flex justify-between items-start mb-6">
+<div className="w-12 h-12 rounded-lg module-icon-container flex items-center justify-center group-hover:bg-purple-500/10 transition-colors">
+<span className="material-symbols-outlined text-purple-400 text-2xl group-hover:scale-110 transition-transform duration-300">badge</span>
+</div>
+<div className="flex items-center gap-2">
+<div className="h-1.5 w-1.5 rounded-full bg-green-500 status-indicator"></div>
+<span className="text-[10px] font-mono text-gray-500 uppercase">{t('catalog.status')}</span>
+</div>
+</div>
+<h3 className="text-xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors">{t('catalog.faceid_title')}</h3>
+<p className="text-sm text-gray-400 leading-relaxed mb-4 border-l-2 border-purple-500/20 pl-3 group-hover:border-purple-500 transition-colors">
+                    {t('catalog.faceid_desc')}
+                </p>
+<div className="flex flex-wrap gap-2 mt-auto">
+<span className="module-tech-tag px-2 py-1 rounded border-purple-500/30 text-purple-300 bg-purple-500/10">TensorFlow</span>
+<span className="module-tech-tag px-2 py-1 rounded border-purple-500/30 text-purple-300 bg-purple-500/10">OpenCV</span>
+<span className="module-tech-tag px-2 py-1 rounded border-purple-500/30 text-purple-300 bg-purple-500/10">C++</span>
+</div>
+</div>
+<div className="module-card rounded-xl p-6 group cursor-pointer hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] border-indigo-500/20">
+<div className="flex justify-between items-start mb-6">
+<div className="w-12 h-12 rounded-lg module-icon-container flex items-center justify-center group-hover:bg-indigo-500/10 transition-colors">
+<span className="material-symbols-outlined text-indigo-400 text-2xl group-hover:scale-110 transition-transform duration-300">file_present</span>
+</div>
+<div className="flex items-center gap-2">
+<div className="h-1.5 w-1.5 rounded-full bg-green-500 status-indicator"></div>
+<span className="text-[10px] font-mono text-gray-500 uppercase">{t('catalog.status')}</span>
+</div>
+</div>
+<h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">{t('catalog.billing_title')}</h3>
+<p className="text-sm text-gray-400 leading-relaxed mb-4 border-l-2 border-indigo-500/20 pl-3 group-hover:border-indigo-500 transition-colors">
+                    {t('catalog.billing_desc')}
+                </p>
+<div className="flex flex-wrap gap-2 mt-auto">
+<span className="module-tech-tag px-2 py-1 rounded border-indigo-500/30 text-indigo-300 bg-indigo-500/10">Java</span>
+<span className="module-tech-tag px-2 py-1 rounded border-indigo-500/30 text-indigo-300 bg-indigo-500/10">SOAP/REST</span>
+<span className="module-tech-tag px-2 py-1 rounded border-indigo-500/30 text-indigo-300 bg-indigo-500/10">XML</span>
+</div>
+</div>
+<div className="module-card rounded-xl p-6 group cursor-pointer hover:shadow-[0_0_30px_rgba(239,68,68,0.15)] border-red-500/20">
+<div className="flex justify-between items-start mb-6">
+<div className="w-12 h-12 rounded-lg module-icon-container flex items-center justify-center group-hover:bg-red-500/10 transition-colors">
+<span className="material-symbols-outlined text-red-400 text-2xl group-hover:scale-110 transition-transform duration-300">analytics</span>
+</div>
+<div className="flex items-center gap-2">
+<div className="h-1.5 w-1.5 rounded-full bg-green-500 status-indicator"></div>
+<span className="text-[10px] font-mono text-gray-500 uppercase">{t('catalog.status')}</span>
+</div>
+</div>
+<h3 className="text-xl font-bold text-white mb-2 group-hover:text-red-300 transition-colors">{t('catalog.analytics_title')}</h3>
+<p className="text-sm text-gray-400 leading-relaxed mb-4 border-l-2 border-red-500/20 pl-3 group-hover:border-red-500 transition-colors">
+                    {t('catalog.analytics_desc')}
+                </p>
+<div className="flex flex-wrap gap-2 mt-auto">
+<span className="module-tech-tag px-2 py-1 rounded border-red-500/30 text-red-300 bg-red-500/10">PowerBI</span>
+<span className="module-tech-tag px-2 py-1 rounded border-red-500/30 text-red-300 bg-red-500/10">SQL</span>
+<span className="module-tech-tag px-2 py-1 rounded border-red-500/30 text-red-300 bg-red-500/10">ETL</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+{/* Specialized Projects Section */}
+<section className="py-24 relative overflow-hidden bg-[#050508]" id="projects" ref={projectsRef}>
+  {/* Technical Background Grid */}
+  <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
+     <svg width="100%" height="100%">
+        <pattern id="tech-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+           <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
+        </pattern>
+        <rect width="100%" height="100%" fill="url(#tech-grid)" />
+     </svg>
+  </div>
+  
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div className={`text-center mb-24 transition-all duration-1000 ease-out transform
+      ${showProjects ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-[40px] blur-md'}`}>
+      <h2 className="font-display font-medium text-white mb-6 flex flex-col items-center">
+        <span className="text-4xl lg:text-5xl opacity-40 tracking-widest uppercase mb-4 font-light">{t('specialized_projects.title_main')}</span>
+        <span className="text-6xl lg:text-8xl font-black gradient-heading tracking-tighter leading-none italic uppercase text-center drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+           {t('specialized_projects.title_accent')}
+        </span>
+      </h2>
+      <div className="w-32 h-1 bg-linear-to-r from-transparent via-blue-500/50 to-transparent mx-auto mt-10 mb-10 opacity-30"></div>
+      <p className="text-gray-400 text-xl max-w-3xl mx-auto font-light leading-relaxed tracking-wide italic">
+        {t('specialized_projects.subtitle')}
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+      {[1, 2, 3].map((num, idx) => {
+        const isCentral = num === 2;
+        const colorHex = num === 1 ? 'rgba(245,158,11,0.5)' : num === 2 ? 'rgba(59,130,246,0.5)' : 'rgba(16,185,129,0.5)';
+        
+        return (
+          <div 
+            key={num} 
+            className={`group relative transition-all duration-1000 ease-out transform
+              ${showProjects ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-[50px] scale-[0.95]'}
+              ${isCentral ? 'z-10' : 'z-0'}`}
+            style={{ transitionDelay: `${0.2 + idx * 0.15}s` }}
+          >
+            {/* Sectorial Glow Backdrop */}
+            <div className={`absolute -inset-10 blur-[120px] opacity-10 group-hover:opacity-30 transition-all duration-1000
+              ${num === 1 ? 'bg-amber-600/40' : num === 2 ? 'bg-blue-600/40' : 'bg-emerald-600/40'}`}></div>
+            
+            <div className={`h-full glass-panel rounded-4xl overflow-hidden border transition-all duration-700 flex flex-col 
+              ${isCentral ? 'border-white/20 bg-black/70 shadow-[0_0_50px_-12px_rgba(59,130,246,0.2)]' : 'border-white/5 bg-black/50'}
+              hover:shadow-[0_0_80px_-15px_${colorHex}] hover:-translate-y-3`}>
               
-              <div className="panel-body">
-                <div className="panel-col-left">
-                  <div className="dashboard-module mod-01">
-                    <div className="mod-header">
-                      <span className="mod-num-bg">01</span>
-                      <h3 className="mod-title">{t.strategy.summary.label.toUpperCase()}</h3>
-                    </div>
-                    <p className="mod-text">
-                      {t.strategy.summary.text}
-                    </p>
+              <div className="p-10 pb-0">
+                <div className="flex justify-between items-center mb-10">
+                  <div className="flex items-center gap-4">
+                     <div className={`w-3 h-3 rounded-full animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.5)] ${num === 1 ? 'bg-amber-500' : num === 2 ? 'bg-blue-500' : 'bg-emerald-500'}`}></div>
+                     <span className={`text-[10px] font-mono font-bold tracking-[0.3em] uppercase ${num === 1 ? 'text-amber-400' : num === 2 ? 'text-blue-400' : 'text-emerald-400'}`}>
+                       {t(`specialized_projects.project${num}_tag`)}
+                     </span>
                   </div>
-
-                  <div className="dashboard-data-list">
-                    {t.strategy.impact.items.map((item: { value: string; label: string }) => (
-                      <div key={item.label} className={`data-block ${item.value === '0' ? 'data-highlight' : ''}`}>
-                        <span className="data-val">{item.value}</span>
-                        <span className="data-label">{item.label.toUpperCase()}</span>
-                      </div>
-                    ))}
+                  <div className="text-[10px] font-mono text-white/30 font-bold uppercase tracking-widest px-3 py-1.5 border border-white/5 bg-white/5 rounded-lg flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[12px] animate-spin-slow">engineering</span>
+                    SISTEMA ACTIVO
                   </div>
                 </div>
-
-                <div className="panel-col-right">
-                  <div className="dashboard-module mod-02">
-                    <div className="mod-header">
-                      <h3 className="mod-title">{t.strategy.protocol.title.toUpperCase()}</h3>
-                    </div>
-                    <div className="pipeline-container">
-                      <div className="pipeline-line" />
-                      <div className="pipeline-steps">
-                        {t.strategy.protocol.steps.map((step: string, idx: number) => (
-                          <div key={step} className="pipeline-step">
-                            <span className="step-num">0{idx + 1}</span>
-                            <span className="step-text">{step}</span>
+                
+                {/* Project Visual Mockup / Dashboard */}
+                <div className="aspect-video w-full rounded-2xl bg-[#000003] border border-white/10 mb-10 relative overflow-hidden p-6 group-hover:border-white/30 transition-all duration-500 shadow-inner group/dashboard">
+                  {/* Grid overlay */}
+                  <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
+                  <div className="absolute inset-0 pointer-events-none bg-linear-to-b from-transparent via-white/5 to-transparent h-[200%] animate-[scan_4s_linear_infinite]"></div>
+                  
+                  {/* Industry Specific Dashboard Content */}
+                  {num === 1 && (
+                    <div className="h-full flex flex-col relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">KDS_HIDROCÁLIDA</span>
+                          <span className="text-[7px] text-white/40 font-mono">LIVE_OPERATIONS_FEED</span>
+                        </div>
+                        <div className="h-1.5 w-12 bg-amber-500/20 rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-500 animate-[progress_5s_infinite]"></div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 grow">
+                        {[1, 2, 3, 4].map(i => (
+                          <div key={i} className={`p-2.5 rounded-lg border border-white/5 bg-white/5 flex flex-col gap-2 transform transition-all duration-700 ${showProjects ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: `${0.8 + i * 0.15}s` }}>
+                            <div className="flex justify-between items-center">
+                              <div className="h-1.5 w-8 bg-white/20 rounded"></div>
+                              <div className={`w-1.5 h-1.5 rounded-full ${i === 1 ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="h-1 w-full bg-white/10 rounded"></div>
+                              <div className="h-1 w-2/3 bg-white/5 rounded"></div>
+                            </div>
                           </div>
                         ))}
                       </div>
+                      <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                        <span className="text-[8px] font-mono text-white/40">AVG_PREP_TIME: 8:42</span>
+                        <span className="text-[8px] font-mono text-green-400">SYNC_OK</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="dashboard-module mod-diff">
-                    <div className="mod-header">
-                      <h3 className="mod-title">{t.strategy.differentiator.title.toUpperCase()}</h3>
-                    </div>
-                    <div className="diff-statement-list">
-                      {t.strategy.differentiator.items.map((item: string) => (
-                        <div key={item} className="diff-statement">{item.toUpperCase()}</div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="cases" className="section section-systems" aria-label="Active Systems">
-          <div className="container">
-            <div className="section-title">
-              <h2 className="h-title">{t.cases.title}</h2>
-              <p>{t.cases.subtitle}</p>
-            </div>
-            <div style={{ height: 48 }} />
-            
-            <div className="systems-wrapper">
-            <div className="systems-carousel" ref={scrollRef} onMouseEnter={() => setAutoRotate(false)} onMouseLeave={() => setAutoRotate(true)}>
-                {t.cases.items.map(
-                  (item: { 
-                    title: string; 
-                    body: string; 
-                    status: 'PRODUCTION' | 'DEVELOPMENT'; 
-                    phase?: string; 
-                    metrics?: string[];
-                    tech?: { users: string; modules: string; integrations: string };
-                  }, index: number) => (
-                    <div key={item.title} className={`system-panel ${index === activeSystemIndex ? 'is-active' : ''}`}>
-                      <div className={`system-status-bar ${item.status === 'PRODUCTION' ? 'status-prod' : 'status-dev'}`} />
-                      
-                      <div className="system-header">
-                        <div className="system-icon-bare" aria-hidden="true">
-                          {item.title.includes('DENTAL') && <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,2C12,2 12,2 12,2C10.6,2 9.4,2.5 8.4,3.4C7.4,4.3 6.9,5.5 6.9,6.9C6.9,8.3 7.4,9.5 8.4,10.4C8.7,10.7 9.1,11 9.5,11.2V14.5C9.5,15.3 10.2,16 11,16H13C13.8,16 14.5,15.3 14.5,14.5V11.2C14.9,11 15.3,10.7 15.6,10.4C16.6,9.5 17.1,8.3 17.1,6.9C17.1,5.5 16.6,4.3 15.6,3.4C14.6,2.5 13.4,2 12,2M12,4C12.8,4 13.5,4.3 14.1,4.9C14.7,5.5 15.1,6.2 15.1,7C15.1,7.8 14.7,8.5 14.1,9.1C13.8,9.4 13.4,9.6 13,9.8V14H11V9.8C10.6,9.6 10.2,9.4 9.9,9.1C9.3,8.5 8.9,7.8 8.9,7C8.9,6.2 9.3,5.5 9.9,4.9C10.5,4.3 11.2,4 12,4M11,18V20H13V18H11M10,21V22H14V21H10Z" /></svg>}
-                          {item.title.includes('RESTAURANTES') || item.title.includes('RESTAURANTS') && <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11,9H13V7H11M11,20H13V18H11M11,15H13V13H11M16,15H18V13H16M16,20H18V18H16M16,9H18V7H16M6,15H8V13H6M6,20H8V18H6M6,9H8V7H6M12,2L1,21H23L12,2Z" /></svg>}
-                          {item.title.includes('SERVICES') && <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z" /></svg>}
-                          {item.title.includes('CRM') && <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,15C15.31,15 18,12.31 18,9C18,5.69 15.31,3 12,3C8.69,3 6,5.69 6,9C6,12.31 8.69,15 12,15M12,5C14.21,5 16,6.79 16,9C16,11.21 14.21,13 12,13C9.79,13 8,11.21 8,9C8,6.79 9.79,5 12,5M20,19C20,16.24 16.42,14 12,14C7.58,14 4,16.24 4,19V21H20V19M6.39,19C7.14,17.81 9.3,16 12,16C14.7,16 16.86,17.81 17.61,19H6.39Z" /></svg>}
-                          {item.title.includes('RETAIL') && <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,18H6V14H12M21,14H12V18H21M12,8V4H21V8M6,4V8H12V4M3,2H21A2,2 0 0,1 23,4V18A2,2 0 0,1 21,20H3A2,2 0 0,1 1,18V4A2,2 0 0,1 3,2Z" /></svg>}
-                        </div>
-                        <div className="system-id">
-                          <span className="label">SYSTEM:</span>
-                          <h3 className="value">{item.title}</h3>
-                        </div>
-                        <div className="system-status">
-                          <span className="label">STATUS:</span>
-                          <span className={`value ${item.status === 'PRODUCTION' ? 'text-prod' : 'text-dev'}`}>
-                            {item.status}
-                          </span>
+                  {num === 2 && (
+                    <div className="h-full flex flex-col relative z-10">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">SISTEMA_DENTAL</span>
+                        <div className="flex gap-2">
+                          <div className="w-4 h-1.5 bg-blue-500/30 rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
                         </div>
                       </div>
-
-                      <div className="system-body">
-                        <p className="system-description">{item.body}</p>
-                        
-                        {item.tech && (
-                          <div className="system-tech-grid">
-                            <div className="tech-item">
-                              <span className="tech-label">USERS</span>
-                              <span className="tech-val">{item.tech.users}</span>
-                            </div>
-                            <div className="tech-item">
-                              <span className="tech-label">MODULES</span>
-                              <span className="tech-val">{item.tech.modules}</span>
-                            </div>
-                            <div className="tech-item">
-                              <span className="tech-label">INTEGRATIONS</span>
-                              <span className="tech-val">{item.tech.integrations}</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {item.metrics && item.metrics.length > 0 && (
-                          <div className="system-tags">
-                            {item.metrics.map((metric) => (
-                              <span key={metric} className="system-tag">
-                                {metric}
-                              </span>
+                      <div className="flex gap-4 grow">
+                        <div className="flex-1 rounded-xl bg-blue-500/5 border border-blue-500/20 p-2.5 flex flex-col justify-between">
+                          <div className="grid grid-cols-5 gap-1">
+                            {Array.from({length: 15}).map((_, i) => (
+                              <div key={i} className={`h-1.5 rounded-sm bg-white/5 ${[2, 5, 8, 12].includes(i) ? 'bg-blue-400/40' : ''}`}></div>
                             ))}
                           </div>
-                        )}
-                        
-                        {item.phase && (
-                          <div className="system-phase">
-                            <span className="label">PHASE:</span>
-                            <span className="value">{item.phase.toUpperCase()}</span>
+                          <div className="space-y-2">
+                            <div className="h-1 w-full bg-blue-500/20 rounded"></div>
+                            <div className="h-1 w-4/5 bg-blue-500/10 rounded"></div>
                           </div>
-                        )}
+                        </div>
+                        <div className="w-20 rounded-xl bg-white/5 border border-white/10 p-2 flex flex-col gap-2 shrink-0">
+                          <div className="h-2 w-full bg-white/20 rounded-sm"></div>
+                          <div className="h-1.5 w-full bg-white/10 rounded-sm"></div>
+                          <div className="h-1.5 w-1/2 bg-white/10 rounded-sm"></div>
+                          <div className="mt-auto h-4 w-full rounded bg-blue-500/30 border border-blue-500/30"></div>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between text-[8px] font-mono">
+                         <span className="text-white/40 uppercase tracking-wider">Historial Clínico Digit.</span>
+                         <span className="text-blue-400 animate-pulse font-bold">LIVE_SAVE</span>
                       </div>
                     </div>
-                  ),
-                )}
-              </div>
+                  )}
 
-              <div className="systems-nav">
-                <button 
-                  type="button" 
-                  className="nav-btn" 
-                  onClick={() => scrollProjects('left')}
-                  aria-label="Previous"
-                >
-                  PREV
-                </button>
-                <div className="nav-divider" />
-                <button 
-                  type="button" 
-                  className="nav-btn" 
-                  onClick={() => scrollProjects('right')}
-                  aria-label="Next"
-                >
-                  NEXT
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="faq" className="section section-brief" aria-label={t.faq.title}>
-          <div className="container">
-            <div className="section-title">
-              <h2 className="h-title">{t.faq.title}</h2>
-              <p>{t.faq.subtitle}</p>
-            </div>
-            <div style={{ height: 48 }} />
-            <div className="brief-list">
-              {t.faq.items.map((item: { q: string; a: string }) => (
-                <div key={item.q} className="brief-item">
-                  <div className="brief-theme">{item.q.toUpperCase()}</div>
-                  <div className="brief-content">
-                    <p className="brief-explanation">{item.a}</p>
-                    <div className="brief-result">
-                      <span className="result-arrow">→</span>
-                      <span className="result-text">
-                        {item.q.toLowerCase().includes('alcance') || item.q.toLowerCase().includes('scope') 
-                          ? (lang === 'es' ? 'Previsibilidad financiera total.' : 'Total financial predictability.')
-                          : item.q.toLowerCase().includes('codigo') || item.q.toLowerCase().includes('code')
-                          ? (lang === 'es' ? 'Propiedad intelectual garantizada.' : 'Guaranteed intellectual property.')
-                          : item.q.toLowerCase().includes('soporte') || item.q.toLowerCase().includes('support')
-                          ? (lang === 'es' ? 'Escalabilidad sin friccion.' : 'Frictionless scalability.')
-                          : (lang === 'es' ? 'Ejecucion de elite garantizada.' : 'Elite execution guaranteed.')}
-                      </span>
+                  {num === 3 && (
+                    <div className="h-full flex flex-col relative z-10">
+                      <div className="flex items-center justify-between mb-5">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">GYM_JAZAR_PRO</span>
+                          <span className="text-[7px] text-white/40 font-mono tracking-widest">REALTIME_BOOKING_SYSTEM</span>
+                        </div>
+                        <span className="material-symbols-outlined text-emerald-500 text-sm animate-bounce-subtle">chat_bubble</span>
+                      </div>
+                      <div className="space-y-4 grow">
+                        {[1, 2].map(i => (
+                          <div key={i} className="space-y-2 bg-emerald-500/5 p-2.5 rounded-xl border border-emerald-500/10 hover:border-emerald-500/30 transition-colors duration-500 cursor-default group/item">
+                            <div className="flex justify-between items-center px-1">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded bg-emerald-500/20 flex items-center justify-center">
+                                  <div className="w-1 h-1 rounded-full bg-emerald-400"></div>
+                                </div>
+                                <div className="h-1.5 w-16 bg-white/20 rounded-full group-hover/item:bg-emerald-400/40 transition-colors"></div>
+                              </div>
+                              <span className="text-[9px] font-mono text-emerald-400 font-bold">{i === 1 ? '98%' : '82%'}</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden shadow-inner">
+                              <div className={`h-full bg-linear-to-r from-emerald-600 to-emerald-400 transition-all duration-1500 ease-out shadow-[0_0_15px_rgba(16,185,129,0.4)] ${showProjects ? (i === 1 ? 'w-[98%]' : 'w-[82%]') : 'w-0'}`} style={{ transitionDelay: `${0.8 + i * 0.3}s` }}></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 flex items-center gap-2">
+                         <div className="flex -space-x-1.5">
+                            {[1, 2, 3].map(j => (
+                               <div key={j} className="w-4 h-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shadow-lg">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                               </div>
+                            ))}
+                         </div>
+                         <span className="text-[7px] text-white/30 font-mono uppercase tracking-widest">+12 reservas hoy</span>
+                      </div>
                     </div>
+                  )}
+                </div>
+
+                <div className="relative group-hover:px-2 transition-all duration-500">
+                  <h3 className="text-3xl font-bold text-white mb-3 tracking-tight leading-none group-hover:translate-x-1 transition-all">{t(`specialized_projects.project${num}_title`)}</h3>
+                  <p className={`text-[11px] font-mono font-bold mb-8 uppercase tracking-[0.25em] transition-colors duration-500 ${num === 1 ? 'text-amber-500/60' : num === 2 ? 'text-blue-500/60' : 'text-emerald-500/60'}`}>{t(`specialized_projects.project${num}_stack`)}</p>
+                  
+                  <div className="relative mb-12">
+                    <div className={`absolute -left-5 top-0 w-1 h-full rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 ${num === 1 ? 'bg-amber-500' : num === 2 ? 'bg-blue-500' : 'bg-emerald-500'}`}></div>
+                    <blockquote className="text-[15px] text-gray-400 font-light leading-relaxed group-hover:text-gray-200 transition-colors">
+                      {t(`specialized_projects.project${num}_quote`)}
+                    </blockquote>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="contact" className="section" aria-label="Contact">
-          <div className="container grid grid-2">
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-              <div className="section-title" style={{ justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
-                <h2 className="h-title" style={{ marginBottom: 6 }}>
-                  {t.contact.title}
-                </h2>
-                <p>{t.contact.subtitle}</p>
-              </div>
-              <div style={{ height: 14 }} />
-              <a className="btn btn-secondary" href={WHATSAPP_LINK_ES} target="_blank" rel="noreferrer">
-                {t.ctaSecondary}
-              </a>
-              <div style={{ height: 10 }} />
-              <div className="note">{t.footer.email}</div>
-            </div>
-
-            <form className="card form" onSubmit={onSubmit}>
-              <div style={{ display: 'none' }}>
-                <label htmlFor="website">Website</label>
-                <input
-                  id="website"
-                  value={form.website}
-                  onChange={(e) => setForm((s) => ({ ...s, website: e.target.value }))}
-                />
               </div>
 
-              <div className="field-grid">
-                <div className="form-group">
-                  <label htmlFor="name">{t.contact.fields.name}</label>
-                  <input
-                    id="name"
-                    value={form.name}
-                    onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
-                    placeholder={lang === 'es' ? 'Tu nombre' : 'Your name'}
-                    required
-                  />
+              <div className="mt-auto p-10 pt-0">
+                <div className="grid grid-cols-2 gap-5 mb-12">
+                  <div className="p-6 rounded-3xl bg-white/3 border border-white/5 group-hover:bg-white/[0.07] group-hover:scale-[1.05] group-hover:shadow-[0_10px_30px_-15px_rgba(0,0,0,0.5)] transition-all duration-500 relative overflow-hidden">
+                    <div className={`absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-700 delay-300 ${num === 1 ? 'bg-amber-500/30' : num === 2 ? 'bg-blue-500/30' : 'bg-emerald-500/30'}`}></div>
+                    <p className={`text-2xl font-black tracking-tighter mb-1 font-display transition-transform duration-500 group-hover:scale-110 origin-left ${num === 1 ? 'text-amber-400' : num === 2 ? 'text-blue-400' : 'text-emerald-400'}`}>
+                       <Counter value={t(`specialized_projects.project${num}_stat1_value`)} isVisible={showProjects} duration={2500} />
+                    </p>
+                    <p className="text-[9px] text-gray-500 font-mono font-bold uppercase tracking-[0.2em]">{t(`specialized_projects.project${num}_stat1_label`)}</p>
+                  </div>
+                  <div className="p-6 rounded-3xl bg-white/3 border border-white/5 group-hover:bg-white/[0.07] group-hover:scale-[1.05] group-hover:shadow-[0_10px_30px_-15px_rgba(0,0,0,0.5)] transition-all duration-500 relative overflow-hidden">
+                    <div className={`absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-700 delay-300 ${num === 1 ? 'bg-amber-500/30' : num === 2 ? 'bg-blue-500/30' : 'bg-emerald-500/30'}`}></div>
+                    <p className={`text-2xl font-black tracking-tighter mb-1 font-display transition-transform duration-500 group-hover:scale-110 origin-left ${num === 1 ? 'text-amber-400' : num === 2 ? 'text-blue-400' : 'text-emerald-400'}`}>
+                      <Counter value={t(`specialized_projects.project${num}_stat2_value`)} isVisible={showProjects} duration={2500} />
+                    </p>
+                    <p className="text-[9px] text-gray-500 font-mono font-bold uppercase tracking-[0.2em]">{t(`specialized_projects.project${num}_stat2_label`)}</p>
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label htmlFor="company">{t.contact.fields.company}</label>
-                  <input
-                    id="company"
-                    value={form.company}
-                    onChange={(e) => setForm((s) => ({ ...s, company: e.target.value }))}
-                    placeholder={lang === 'es' ? 'Nombre de tu empresa' : 'Company name'}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="whatsapp">{t.contact.fields.whatsapp}</label>
-                  <input
-                    id="whatsapp"
-                    value={form.whatsapp}
-                    onChange={(e) => setForm((s) => ({ ...s, whatsapp: e.target.value }))}
-                    placeholder={lang === 'es' ? '+52...' : '+52...'}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="email">{t.contact.fields.email}</label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
-                    placeholder={lang === 'es' ? 'tu@empresa.com' : 'you@company.com'}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="industry">{t.contact.fields.industry}</label>
-                  <select
-                    id="industry"
-                    value={form.industry}
-                    onChange={(e) => setForm((s) => ({ ...s, industry: e.target.value }))}
-                    required
-                  >
-                    <option value="">{lang === 'es' ? 'Selecciona' : 'Select'}</option>
-                    {t.contact.industries.map((industry: string) => (
-                      <option key={industry} value={industry}>
-                        {industry}
-                      </option>
+
+                <div className="flex items-center justify-between border-t border-white/10 pt-10">
+                  <div className="flex items-center gap-5">
+                    <div className="relative group/avatar">
+                      <div className={`absolute -inset-1 blur-md opacity-20 group-hover/avatar:opacity-50 transition-all duration-500 rounded-full ${num === 1 ? 'bg-amber-500' : num === 2 ? 'bg-blue-500' : 'bg-emerald-500'}`}></div>
+                      <div className="relative w-12 h-12 rounded-2xl bg-linear-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center text-sm font-black text-white shadow-xl uppercase group-hover:scale-110 transition-transform">
+                        {t(`specialized_projects.project${num}_author`).split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[15px] font-bold text-white leading-none mb-2 font-display">{t(`specialized_projects.project${num}_author`)}</p>
+                      <p className={`text-[9px] font-mono uppercase tracking-widest font-black opacity-40 group-hover:opacity-100 transition-opacity ${num === 1 ? 'text-amber-400' : num === 2 ? 'text-blue-400' : 'text-emerald-400'}`}>
+                        {t(`specialized_projects.project${num}_role`)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    {Array.from({length: 3}).map((_, i) => (
+                      <div key={i} className={`w-1 h-3 rounded-full opacity-20 ${num === 1 ? 'bg-amber-500' : num === 2 ? 'bg-blue-500' : 'bg-emerald-500'}`}></div>
                     ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="goal">{t.contact.fields.goal}</label>
-                  <select
-                    id="goal"
-                    value={form.goal}
-                    onChange={(e) => setForm((s) => ({ ...s, goal: e.target.value }))}
-                    required
-                  >
-                    <option value="">{lang === 'es' ? 'Selecciona' : 'Select'}</option>
-                    {t.contact.goals.map((goal: string) => (
-                      <option key={goal} value={goal}>
-                        {goal}
-                      </option>
-                    ))}
-                  </select>
+                  </div>
                 </div>
               </div>
-
-              <div className="form-group" style={{ marginTop: 24 }}>
-                <label htmlFor="message">{t.contact.fields.message}</label>
-                <textarea
-                  id="message"
-                  value={form.message}
-                  onChange={(e) => setForm((s) => ({ ...s, message: e.target.value }))}
-                  placeholder={
-                    lang === 'es'
-                      ? 'Describe tu situacion en 1-2 lineas'
-                      : 'Describe your situation in 1-2 lines'
-                  }
-                />
-              </div>
-
-              <div className="form-actions">
-                <button type="submit" className="btn btn-primary" disabled={status === 'loading'}>
-                  {status === 'loading' ? t.contact.submitting : t.contact.submit}
-                </button>
-                <span className="note">{t.pricingLine}</span>
-              </div>
-
-              {status === 'success' ? <p className="note">{t.contact.success}</p> : null}
-              {status === 'error' ? <p className="note">{t.contact.error}</p> : null}
-            </form>
-          </div>
-        </section>
-
-        <footer className="footer" aria-label="Footer">
-          <div className="container footer-inner">
-            <div className="brand">
-              <img src={logo} alt="" className="brand-logo" style={{ width: 30, height: 30 }} />
-              <div className="brand-text">
-                <span>VANTA</span>
-                <small>SOLUTIONS</small>
-              </div>
-            </div>
-            <div className="footer-info">
-              <span className="note">{t.footer.location}</span>
-              <span className="footer-dot" aria-hidden="true">•</span>
-              <span className="note">{t.footer.email}</span>
-              <span className="footer-dot" aria-hidden="true">•</span>
-              <span className="note">{t.footer.instagram}</span>
             </div>
           </div>
-        </footer>
-      </main>
+        );
+      })}
     </div>
-  )
-}
 
-export default App
+    {/* Measurable Impact Section */}
+    <div className="mt-48 relative" ref={impactRef}>
+      <div className="flex items-center gap-12 mb-28">
+         <div className="h-px grow bg-linear-to-r from-transparent to-white/10"></div>
+         <div className="px-8 py-3 rounded-full border border-blue-500/20 bg-blue-500/5 text-[11px] font-black tracking-[0.4em] text-blue-400 uppercase backdrop-blur-sm">
+            {t('specialized_projects.measurable_impact')}
+         </div>
+         <div className="h-px grow bg-linear-to-l from-transparent to-white/10"></div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+         {[1, 2, 3].map((num) => (
+           <div key={num} className="group relative text-center">
+              <div className={`absolute inset-0 blur-[80px] opacity-10 group-hover:opacity-30 transition-all duration-1000 ${num === 1 ? 'bg-amber-500' : num === 2 ? 'bg-blue-500' : 'bg-emerald-500'}`}></div>
+              <div className="relative py-16 px-10 rounded-4xl border border-white/5 bg-black/40 hover:bg-black/60 transition-all duration-700 hover:scale-[1.02]">
+                 <h4 className={`text-7xl lg:text-8xl font-black mb-6 tracking-tightest ${num === 1 ? 'text-amber-400' : num === 2 ? 'text-blue-400' : 'text-emerald-400'}`}>
+                   <Counter value={t(`specialized_projects.stat${num}_value`)} isVisible={showImpact || showProjects} duration={2000} />
+                 </h4>
+                 <p className="text-white font-black text-base tracking-widest mb-3 uppercase">{t(`specialized_projects.stat${num}_label`)}</p>
+                 <div className="w-12 h-0.5 bg-white/10 mx-auto mb-4 group-hover:w-20 transition-all"></div>
+                 <p className="text-gray-500 text-xs font-mono tracking-widest leading-relaxed font-light">{t(`specialized_projects.stat${num}_desc`)}</p>
+              </div>
+           </div>
+         ))}
+      </div>
+    </div>
+  </div>
+</section>
+  <section id="contact" className="relative py-48 overflow-hidden">
+    <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 bg-black/60 z-10"></div>
+      <img alt="Background Particles" className="w-full h-full object-cover opacity-30 mix-blend-screen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFMw1UxfIKK6eWIHicfXJi3kgl-ku0iHU-p1oycqsErdoKjAY1bMzTVviofu9Kg4VkrdchmK6bcu1DlexeBItX06Gj-BQAl5IS5pO-u2HlzRH3bqOp2s8LuXByRjvx8DLpCqEUM_dNTd5Qw9nz24YqCv0zcY7BsNma2_BXmaUowiRNpjnTGy1qNcE_Fw1xkHHZW4EE-RyEYOIo8Cztv73C0CjoNd-ci48fxZwMslB4Za4RyOX4AKKdXoZtQYzAiaLQTUQmj8rXWxU"/>
+      <div className="absolute inset-0 bg-linear-to-t from-background-deep via-transparent to-background-deep"></div>
+    </div>
+
+    <div className="max-w-7xl mx-auto px-4 relative z-20">
+      <div className="text-center mb-16">
+        <div className="mb-12 inline-block relative bg-red-500/10 border border-red-500/20 px-6 py-3 rounded-xl backdrop-blur-sm animate-pulse">
+          <p className="text-red-300 text-sm font-medium">{t('cta_bottom.banner')}</p>
+        </div>
+        <p className="text-gray-300 text-lg mb-4 font-light italic">{t('cta_bottom.quote')}</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center mb-32">
+        <div>
+          <h2 className="font-display text-7xl md:text-8xl font-bold text-white mb-12 tracking-tight leading-tight">
+            {t('cta_bottom.title_main')} <br /> 
+            <span className="gradient-heading italic">{t('cta_bottom.title_accent')}</span>
+          </h2>
+          <div className="flex flex-col sm:flex-row gap-6">
+            <button className="glass-panel text-white px-10 py-5 rounded-full text-lg font-bold hover:bg-white/10 border-white/30 flex items-center justify-center gap-4 transition-all w-fit">
+              <span>{t('cta_bottom.btn2')}</span>
+              <span className="material-symbols-outlined">data_exploration</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="relative">
+          <div className="absolute -inset-4 bg-violet-600/20 blur-3xl opacity-50"></div>
+          
+          <form className="relative glass-panel p-8 md:p-10 rounded-3xl border border-white/10" onSubmit={onSubmit}>
+            <div style={{ display: 'none' }}>
+              <label htmlFor="website">Website</label>
+              <input id="website" value={form.website} onChange={(e) => setForm(s => ({ ...s, website: e.target.value }))} />
+            </div>
+
+            <h3 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+              <span className="material-symbols-outlined text-violet-400">contact_support</span>
+              {t('form.title')}
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+              <div className="space-y-2">
+                <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">{t('form.name')}</label>
+                <input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-violet-500/50 transition-all text-sm"
+                  required value={form.name} onChange={(e) => setForm(s => ({...s, name: e.target.value}))} placeholder="Tu nombre" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">{t('form.company')}</label>
+                <input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-violet-500/50 transition-all text-sm"
+                  required value={form.company} onChange={(e) => setForm(s => ({...s, company: e.target.value}))} placeholder="Nombre de tu empresa" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">{t('form.email')}</label>
+                <input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-violet-500/50 transition-all text-sm" type="email"
+                  required value={form.email} onChange={(e) => setForm(s => ({...s, email: e.target.value}))} placeholder="correo@empresa.com" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">{t('form.whatsapp')}</label>
+                <input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-violet-500/50 transition-all text-sm"
+                  required value={form.whatsapp} onChange={(e) => setForm(s => ({...s, whatsapp: e.target.value}))} placeholder="+52..." />
+              </div>
+            </div>
+            
+            <div className="space-y-2 mb-8">
+              <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">{t('form.details')}</label>
+              <textarea className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-violet-500/50 transition-all text-sm min-h-[100px]"
+                value={form.message} onChange={(e) => setForm(s => ({...s, message: e.target.value}))} placeholder="Describe tus cuellos de botella" />
+            </div>
+
+            <button type="submit" disabled={status === 'loading'} className="w-full py-5 text-white font-bold tracking-widest rounded-xl btn-primary-gradient relative overflow-hidden group shadow-lg shadow-violet-600/20 active:scale-[0.98] transition-transform">
+              <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              <span className="relative z-10 flex items-center justify-center gap-3">
+                {status === 'loading' ? t('form.sending') : (
+                  <>
+                    {t('form.submit')}
+                    <span className="material-symbols-outlined text-sm">send</span>
+                  </>
+                )}
+              </span>
+            </button>
+
+            {status === 'success' && <p className="text-green-400 text-center text-sm mt-4 font-bold flex items-center justify-center gap-2">
+              <span className="material-symbols-outlined">check_circle</span>
+              {t('form.success')}
+            </p>}
+            {status === 'error' && <p className="text-red-400 text-center text-sm mt-4 font-bold flex items-center justify-center gap-2">
+              <span className="material-symbols-outlined">error</span>
+              {t('form.error')}
+            </p>}
+          </form>
+        </div>
+      </div>
+
+      <div className="pt-16 border-t border-white/10 grid grid-cols-1 md:grid-cols-3 gap-8 text-gray-500 text-[10px] font-mono uppercase tracking-[0.3em]">
+        <p className="text-center md:text-left">© 2024 {t('comparison.vanta')}. Derechos Reservados.</p>
+        <div className="flex justify-center gap-8">
+          <a className="hover:text-violet-400 transition-colors" href="#">{t('cta_bottom.privacy')}</a>
+          <a className="hover:text-violet-400 transition-colors" href="#">{t('cta_bottom.terms')}</a>
+        </div>
+        <div className="flex justify-center md:justify-end gap-6 h-fit">
+          <a className="hover:text-white transition-colors" href="#">{t('cta_bottom.contact')}</a>
+          <a className="hover:text-white transition-colors" href="#">{t('cta_bottom.linkedin')}</a>
+          <a className="hover:text-white transition-colors" href="#">{t('cta_bottom.github')}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+      {/* End main content wrapper */}
+      </div>
+    </>
+  );
+}
