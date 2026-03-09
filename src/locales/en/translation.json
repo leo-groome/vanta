@@ -2,10 +2,115 @@
   "nav": {
     "manifesto": "The Firm",
     "hero": "Home",
+    "servicios": "Our APPS",
     "social_proof": "Trust",
     "pain_points": "Pain Points",
     "command": "Command",
     "contact": "SCHEDULE MEETING"
+  },
+  "crm_promo": {
+    "badge": "NEW CLOUD SERVICE",
+    "title": "VANTA CRM",
+    "subtitle": "Evolution in Commercial Intelligence",
+    "description": "It's not just a CRM, it's a deal-closing engine. Centralize your pipeline, pre-qualify clients with AI, and automate follow-ups so your team focuses on what matters: selling.",
+    "cta_primary": "SCHEDULE A DEMO",
+    "cta_secondary": "View Architecture",
+    "benefits_title": "THE VANTA DIFFERENCE",
+    "benefits": {
+      "automation": {
+        "title": "Extreme Automation",
+        "description": "From lead capture on WhatsApp to contract signing. Zero manual tasks."
+      },
+      "intelligence": {
+        "title": "Predictive Qualification",
+        "description": "Algorithms that assign a 'Lead Score' to know exactly which prospect is ready to buy."
+      },
+      "ecosystem": {
+        "title": "Integrated Ecosystem",
+        "description": "Native connection with your current tools: ERP, billing, and social media."
+      }
+    },
+    "features_title": "CORE MODULES",
+    "plans_title": "CHOOSE YOUR ECOSYSTEM",
+    "plans": {
+      "starter": {
+        "title": "CRM Starter",
+        "price": "$299",
+        "price_suffix": "/ month",
+        "price_note": "Base Plan",
+        "description": "Ideal for small teams looking to structure their basic sales processes.",
+        "features": [
+          "Integrated Basic Pipeline",
+          "Centralized Contact Management",
+          "WhatsApp Integration (1 Number)",
+          "Standard Email Support"
+        ],
+        "cta": "Get Started"
+      },
+      "standard": {
+        "title": "CRM Standard",
+        "price": "$599",
+        "price_suffix": "/ month",
+        "price_note": "Most Popular",
+        "description": "For growing businesses needing automation and detailed tracking and analysis.",
+        "features": [
+          "Multiple Custom Pipelines",
+          "Email and Task Automation",
+          "Real-Time KPI Dashboards",
+          "Basic Predictive Qualification (Scoring)"
+        ],
+        "cta": "Choose Standard"
+      },
+      "pro": {
+        "title": "CRM Pro",
+        "price": "$1200+",
+        "price_suffix": "/ month",
+        "price_note": "Enterprise Level",
+        "description": "Complete solution with advanced AI and high-performance processes for enterprises.",
+        "features": [
+          "Sentiment Analysis AI",
+          "Advanced Follow-Up Bots",
+          "Advanced Financial Projections",
+          "External Modules Integration"
+        ],
+        "cta": "Contact Sales"
+      }
+    },
+    "features": {
+      "capture": {
+        "title": "Omnichannel Capture",
+        "description": "Centralize prospects from Facebook, Instagram, Landing Pages, and calls in a single clean dashboard."
+      },
+      "pipeline": {
+        "title": "Interactive Pipeline",
+        "description": "Visualize the status of every negotiation in draggable kanban columns with strict transition rules."
+      },
+      "scoring": {
+        "title": "Follow-Up Bots",
+        "description": "Automated agents sending reminders, emails, and WhatsApp messages based on the client's stage."
+      },
+      "analytics": {
+        "title": "Analytics Dashboard",
+        "description": "Conversion reports, revenue projection (Forecast), and individual performance metrics for your sales reps."
+      }
+    },
+    "dashboard": {
+      "welcome": "Hello, Sales Team",
+      "kpi1": "Win Rate",
+      "kpi2": "New Leads",
+      "kpi3": "Projected Revenue",
+      "stage1": "Contact",
+      "stage2": "Negotiation",
+      "stage3": "Closing",
+      "deal": "Project"
+    },
+    "integrations": "LIMITLESS CONNECTIVITY",
+    "cta_bottom": {
+      "title": "Are you losing 30% of sales due to bad management?",
+      "subtitle": "Implement VANTA CRM in less than 2 weeks and transform your commercial department.",
+      "button": "TALK TO AN ENGINEER",
+      "back": "← BACK TO HOME"
+    }
   },
   "hero": {
     "eyebrow": "Next-Gen Intelligence Architecture",

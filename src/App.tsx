@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import Services from './pages/Services';
 import logo from './assets/logo.svg';
 
 const Typewriter = ({ text, delay = 0, speed = 30, className = "", onComplete, startTrigger = true }: { text: string, delay?: number, speed?: number, className?: string, onComplete?: () => void, startTrigger?: boolean }) => {
@@ -290,6 +292,7 @@ const StaticWords = ({ text }: { text: string }) => {
 
 export default function App() {
   const { t, i18n } = useTranslation();
+  const location = useLocation();
   const [lang, setLang] = useState(i18n.language || 'es');
   const [revealManual, setRevealManual] = useState(false);
   const [resetVisibility, setResetVisibility] = useState(false);
@@ -315,6 +318,21 @@ export default function App() {
   const TOTAL_PROTOCOL_CARDS = 4;
   const [activeCard, setActiveCard] = React.useState(0);
   const touchStartX = React.useRef(0);
+
+  useEffect(() => {
+    // Manejar el scroll automático hacia las secciones (hash links)
+    if (location.hash) {
+      setTimeout(() => {
+        const id = location.hash.replace('#', '');
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [location]);
 
   const goToCard = (idx: number) => {
     if (!protocolScrollRef.current) return;
@@ -390,33 +408,55 @@ export default function App() {
       projectsObserver.disconnect();
       impactObserver.disconnect();
     };
-  }, []);
+  }, [location.pathname]);
 
+  const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mvzwzyrv'; // Configurado con el ID del usuario
   const SHEETS_WEBHOOK = 'https://script.google.com/macros/s/AKfycbzAjrczJVoIaI5VI8Jbe2SUwDZ5Uxy-5L9fkmQKLIeiQDSwAGGwP36YXBgBeuTy81dt/exec';
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.website) return; // honeypot anti-spam
     setStatus('loading');
 
-    const params = new URLSearchParams();
-    Object.entries({ ...form, lang }).forEach(([k, v]) => params.append(k, String(v)));
-    const sheetUrl = `${SHEETS_WEBHOOK}?${params.toString()}`;
-
-    // Image pixel ping — bypasses CORS & follows Google Script redirects natively
-    const img = new Image();
-    img.onload = img.onerror = () => {
-      setStatus('success');
-      setForm({ name: '', company: '', whatsapp: '', email: '', industry: '', goal: '', message: '', website: '' });
+    // Preparar datos para Formspree y Sheets
+    const formData = { 
+      ...form, 
+      lang,
+      _subject: `Nuevo Lead: ${form.name} - ${form.company}`
     };
-    img.src = sheetUrl;
 
-    // Fire-and-forget to Railway (best effort)
-    fetch('https://vantasolutions-production.up.railway.app/contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, lang }),
-    }).catch(() => {});
+    try {
+      // 1. Envío a Formspree (Correos)
+      const formspreePromise = fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      // 2. Envío a Google Sheets (Respaldo/Base de datos)
+      const params = new URLSearchParams();
+      Object.entries(formData).forEach(([k, v]) => params.append(k, String(v)));
+      const sheetUrl = `${SHEETS_WEBHOOK}?${params.toString()}`;
+      
+      const img = new Image();
+      const sheetsPromise = new Promise((resolve) => {
+        img.onload = img.onerror = () => resolve(true);
+        img.src = sheetUrl;
+      });
+
+      // Ejecutar ambos envíos
+      const [response] = await Promise.all([formspreePromise, sheetsPromise]);
+
+      if ((response as Response).ok) {
+        setStatus('success');
+        setForm({ name: '', company: '', whatsapp: '', email: '', industry: '', goal: '', message: '', website: '' });
+      } else {
+        setStatus('error');
+      }
+    } catch (error) {
+      console.error("Error enviando formulario:", error);
+      setStatus('error');
+    }
   };
 
 
@@ -448,12 +488,12 @@ export default function App() {
 </div>
 <div className="hidden lg:block">
 <div className="ml-10 flex items-baseline space-x-8 xl:space-x-12">
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#manifesto">{t('nav.manifesto')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#hero">{t('nav.hero')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#pain-points">{t('nav.pain_points')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#command">{t('nav.command')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#projects">Proyectos<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
-<a className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" href="#contact">Contáctanos<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></a>
+<Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/#manifesto">{t('nav.manifesto')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
+<Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/servicios">{t('nav.servicios')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
+<Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/#pain-points">{t('nav.pain_points')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
+<Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/#command">{t('nav.command')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
+<Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/#projects">Proyectos<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
+<Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/#contact">Contáctanos<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
 </div>
 </div>
 <div className="hidden lg:flex items-center gap-4 xl:gap-6">
@@ -494,16 +534,20 @@ export default function App() {
         <span className="material-symbols-outlined text-2xl">close</span>
       </button>
 
-      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#manifesto">{t('nav.manifesto')}</a>
-      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#hero">{t('nav.hero')}</a>
-      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#pain-points">{t('nav.pain_points')}</a>
-      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#command">{t('nav.command')}</a>
-      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#projects">Proyectos</a>
-      <a onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" href="#contact">Contáctanos</a>
+      <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/#manifesto">{t('nav.manifesto')}</Link>
+      <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/servicios">{t('nav.servicios')}</Link>
+      <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/#pain-points">{t('nav.pain_points')}</Link>
+      <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/#command">{t('nav.command')}</Link>
+      <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/#projects">Proyectos</Link>
+      <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/#contact">Contáctanos</Link>
     </div>
   </div>
 )}
 </nav>
+
+<Routes>
+  <Route path="/" element={
+  <>
 
 <section className="py-32 relative overflow-hidden bg-[#050505] flex items-center justify-center min-h-screen" id="manifesto">
   <div className="absolute inset-0 bg-grid-pattern opacity-[0.05] pointer-events-none"></div>
@@ -1939,6 +1983,11 @@ export default function App() {
       </div>
     </div>
   </section>
+
+  </>
+  } />
+  <Route path="/servicios" element={<Services />} />
+</Routes>
   
       {/* End main content wrapper */}
       </div>

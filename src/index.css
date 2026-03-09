@@ -623,6 +623,15 @@
 }
 @keyframes moveProgress { 0% { left: 0%; } 100% { left: 66%; } }
 
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.5s infinite linear;
+}
+
 @keyframes scan {
   from { transform: translateY(-100%); }
   to { transform: translateY(500%); }

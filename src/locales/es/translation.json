@@ -2,10 +2,115 @@
   "nav": {
     "manifesto": "La Firma",
     "hero": "Inicio",
+    "servicios": "Nuestras APPS",
     "social_proof": "Confianza",
     "pain_points": "Dolores",
     "command": "Comando",
     "contact": "AGENDAR CITA"
+  },
+  "crm_promo": {
+    "badge": "NUEVO SERVICIO CLOUD",
+    "title": "VANTA CRM",
+    "subtitle": "Evolución en Inteligencia Comercial y Ventas",
+    "description": "No es solo un CRM, es un motor de cierre de tratos. Centraliza tu pipeline, precalifica clientes con IA y automatiza el seguimiento para que tu equipo se enfoque en lo que importa: vender.",
+    "cta_primary": "AGENDA UNA DEMO",
+    "cta_secondary": "Ver Arquitectura",
+    "benefits_title": "LA DIFERENCIA VANTA",
+    "benefits": {
+      "automation": {
+        "title": "Automatización Extrema",
+        "description": "Desde la captura del lead en WhatsApp hasta la firma del contrato. Cero tareas manuales."
+      },
+      "intelligence": {
+        "title": "Calificación Predictiva",
+        "description": "Algoritmos que asignan un 'Lead Score' para saber qué prospecto está listo para comprar."
+      },
+      "ecosystem": {
+        "title": "Ecosistema Integrado",
+        "description": "Conexión nativa con tus herramientas actuales: ERP, facturación y redes sociales."
+      }
+    },
+    "features_title": "MÓDULOS PRINCIPALES",
+    "plans_title": "ELIGE TU ECOSISTEMA",
+    "plans": {
+      "starter": {
+        "title": "CRM Starter",
+        "price": "$299",
+        "price_suffix": "/ mes",
+        "price_note": "Plan Base",
+        "description": "Ideal para equipos pequeños buscando estructurar sus procesos básicos de ventas.",
+        "features": [
+          "Pipeline Básico Integrado",
+          "Gestión de Contactos Centralizada",
+          "Integración con WhatsApp (1 Número)",
+          "Soporte Estándar por Email"
+        ],
+        "cta": "Comenzar"
+      },
+      "standard": {
+        "title": "CRM Standard",
+        "price": "$599",
+        "price_suffix": "/ mes",
+        "price_note": "Más Popular",
+        "description": "Para negocios en crecimiento que necesitan automatización y análisis detallado.",
+        "features": [
+          "Múltiples Pipelines Personalizados",
+          "Automatización de Tareas y Correos",
+          "Dashboards de KPIs en Tiempo Real",
+          "Calificación Predictiva (Scoring) Básica"
+        ],
+        "cta": "Elegir Standard"
+      },
+      "pro": {
+        "title": "CRM Pro",
+        "price": "$1200+",
+        "price_suffix": "/ mes",
+        "price_note": "Nivel Empresarial",
+        "description": "Solución completa con IA avanzada y procesos de alto rendimiento para corporativos.",
+        "features": [
+          "IA para Análisis de Sentimiento",
+          "Bots de Seguimiento Avanzado",
+          "Proyecciones Financieras Avanzadas",
+          "Integración de Módulos Externos"
+        ],
+        "cta": "Contactar Ventas"
+      }
+    },
+    "features": {
+      "capture": {
+        "title": "Captura Multicanal",
+        "description": "Centraliza prospectos de Facebook, Instagram, Landing Pages y llamadas en un solo panel de control limpio."
+      },
+      "pipeline": {
+        "title": "Pipeline Interactivo",
+        "description": "Visualiza el estado de cada negociación en columnas kanban arrastrables con reglas de transición estrictas."
+      },
+      "scoring": {
+        "title": "Bots de Seguimiento",
+        "description": "Agentes automatizados que envían recordatorios, correos y WhatsApps según la etapa del cliente."
+      },
+      "analytics": {
+        "title": "Panel de Analíticas",
+        "description": "Reportes de conversión, proyección de ingresos (Forecast) y rendimiento individual de tus asesores de ventas."
+      }
+    },
+    "dashboard": {
+      "welcome": "Hola, Equipo Ventas",
+      "kpi1": "Tasa de Cierre",
+      "kpi2": "Nuevos Leads",
+      "kpi3": "Ingreso Proyectado",
+      "stage1": "Contacto",
+      "stage2": "Negociación",
+      "stage3": "Cierre",
+      "deal": "Proyecto"
+    },
+    "integrations": "CONECTIVIDAD SIN LÍMITES",
+    "cta_bottom": {
+      "title": "¿Estás perdiendo el 30% de tus ventas por mala gestión?",
+      "subtitle": "Implementa VANTA CRM en menos de 2 semanas y transforma tu departamento comercial.",
+      "button": "HABLAR CON UN INGENIERO",
+      "back": "← VOLVER AL INICIO"
+    }
   },
   "hero": {
     "eyebrow": "Arquitectura de Inteligencia Next-Gen",
