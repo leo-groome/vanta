@@ -4,6 +4,7 @@ This file guides agentic coding tools in this repo.
 
 ## Project facts
 - Vite + React 19 + TypeScript + Tailwind CSS v4.
+- Animations powered by `framer-motion` for page transitions and interactive reveals.
 - Main marketing site in `src/App.tsx` and CRM Specialized page in `src/pages/Services.tsx`.
 - Localization handled by `react-i18next` with JSON files in `src/locales/`.
 - Forms use a dual submission strategy: Formspree (email) + Google Sheets Webhook (data backup).
@@ -68,6 +69,8 @@ This file guides agentic coding tools in this repo.
 
 ## Tooling
 - Tailwind CSS v4 with `@theme` blocks in `index.css`.
+- `framer-motion` for complex UI choreography (transitions, reveals).
+- `lucide-react` and `material-symbols` for iconography.
 - Google Search Console and Analytics snippets in `index.html`.
 
 ## Repo hygiene
