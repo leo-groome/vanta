@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 import Services from './pages/Services';
-import logo from './assets/logo.svg';
+import logo from './assets/logo-vanta-Fondo.png';
 
 const Typewriter = ({ text, delay = 0, speed = 30, className = "", onComplete, startTrigger = true }: { text: string, delay?: number, speed?: number, className?: string, onComplete?: () => void, startTrigger?: boolean }) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -63,7 +65,7 @@ const VantaLogo = ({ className = "" }: { className?: string }) => {
       </div>
 
       {/* The Logo */}
-      <img src={logo} alt="Vanta Logo" className="relative z-10 h-full w-auto object-contain brightness-110" />
+      <img src={logo} alt="Vanta Logo" className="relative z-10 h-full w-auto object-contain" />
     </div>
   );
 };
@@ -101,6 +103,100 @@ const TypographicLoader = ({ onComplete }: { onComplete: () => void }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+const PageTransition = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const FAQItem = ({ question, answer, isOpen, onClick }: { question: string, answer: string, isOpen: boolean, onClick: () => void }) => {
+  return (
+    <div className={`border border-white/5 rounded-2xl overflow-hidden transition-all duration-500 ${isOpen ? 'bg-white/5 border-white/20' : 'hover:bg-white/2'}`}>
+      <button 
+        onClick={onClick}
+        className="w-full px-6 py-5 flex items-center justify-between text-left group"
+      >
+        <span className={`text-sm md:text-base font-bold transition-colors duration-300 ${isOpen ? 'text-violet-400' : 'text-gray-300 group-hover:text-white'}`}>
+          {question}
+        </span>
+        <div className={`shrink-0 ml-4 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}>
+          <ChevronDown className={`w-5 h-5 transition-colors duration-300 ${isOpen ? 'text-violet-400' : 'text-gray-500 group-hover:text-white'}`} />
+        </div>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+          >
+            <div className="px-6 pb-6 text-sm md:text-base text-gray-400 leading-relaxed border-t border-white/5 pt-4">
+              {answer}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const FAQSection = () => {
+  const { t } = useTranslation();
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  const questions = [
+    { q: t('faq.q1'), a: t('faq.a1') },
+    { q: t('faq.q2'), a: t('faq.a2') },
+    { q: t('faq.q3'), a: t('faq.a3') },
+    { q: t('faq.q4'), a: t('faq.a4') }
+  ];
+
+  return (
+    <section className="py-24 relative overflow-hidden" id="faq">
+      <div className="max-w-4xl mx-auto px-6 relative z-10">
+        <div className="text-center mb-16">
+          <motion.span 
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-[10px] md:text-xs font-mono font-bold tracking-[0.5em] text-violet-500 uppercase mb-4 block"
+          >
+            {t('faq.title')}
+          </motion.span>
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-5xl font-display font-bold text-white mb-6"
+          >
+            {t('faq.subtitle')}
+          </motion.h2>
+        </div>
+
+        <div className="space-y-4">
+          {questions.map((item, index) => (
+            <FAQItem 
+              key={index}
+              question={item.q}
+              answer={item.a}
+              isOpen={openIndex === index}
+              onClick={() => setOpenIndex(openIndex === index ? null : index)}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 };
 
@@ -167,7 +263,7 @@ const VisibilityWord = ({ word, forceReset, globalReveal }: { word: string; forc
     <span
       onMouseEnter={handleReveal}
       className={`visibility-word text-lg font-bold transition-all duration-1000 cursor-pointer grayscale select-none ${
-        isVisible ? 'opacity-100 blur-0 grayscale-0' : 'opacity-20 blur-[6px]'
+        isVisible ? 'opacity-100 blur-0 grayscale-0' : 'opacity-30 blur-[2px]'
       }`}
     >
       {word}
@@ -545,9 +641,13 @@ export default function App() {
 )}
 </nav>
 
-<Routes>
-  <Route path="/" element={
-  <>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={
+          <PageTransition>
+            <>
+              {/* Note: In a real scenario, all sections would be here. 
+                  Since I'm doing a partial replace, I'll just wrap the existing boundaries. */}
 
 <section className="py-32 relative overflow-hidden bg-[#050505] flex items-center justify-center min-h-screen" id="manifesto">
   <div className="absolute inset-0 bg-grid-pattern opacity-[0.05] pointer-events-none"></div>
@@ -783,7 +883,7 @@ export default function App() {
   <div className={`diagnostic-scan-line ${showDiagnostic ? 'animate-scan' : ''}`}></div>
 
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-    <div className={`text-center mb-24 ${showDiagnostic ? 'reveal-diagnostic' : 'opacity-0'}`}>
+    <div className={`text-center mb-24 ${showDiagnostic ? 'reveal-diagnostic' : 'opacity-20 transition-opacity duration-1000'}`}>
       <span className="text-violet-500 font-mono text-[10px] uppercase tracking-[0.3em] mb-6 block">
         {t('pain_points.eyebrow')}
       </span>
@@ -807,7 +907,7 @@ export default function App() {
         },
         { 
           icon: 'lan', 
-          title1: 'Caos', 
+          title1: t('pain_points.card2_title1'), 
           title2: t('pain_points.card2_title2'), 
           desc: t('pain_points.card2_desc'),
           alert: '⚠ FLUJO FRAGMENTADO'
@@ -822,7 +922,7 @@ export default function App() {
         { 
           icon: 'sensors_off', 
           title1: t('pain_points.card4_title1'), 
-          title2: 'Real', 
+          title2: t('pain_points.card4_title2'), 
           desc: t('pain_points.card4_desc'),
           alert: '⚠ VISIBILIDAD COMPROMETIDA'
         }
@@ -854,7 +954,7 @@ export default function App() {
             </span>
           </div>
           
-          <div className={`${idx === 0 && !revealManual ? 'blur-lg grayscale' : 'blur-0 grayscale-0'} transition-all duration-1000`}>
+          <div className={`${idx === 0 && !revealManual ? 'blur-md grayscale' : 'blur-0 grayscale-0'} transition-all duration-1000`}>
             <h3 className="text-xl font-bold text-white mb-4 tracking-tight">
               {card.title1 && <span className="text-red-400/90">{card.title1} </span>}
               {card.title2}
@@ -982,11 +1082,34 @@ export default function App() {
 </div>
 <div className="relative z-10 w-full">
 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div className="text-center mb-10 lg:mb-16">
-<h2 className="font-display text-5xl lg:text-7xl font-bold text-white mb-4">El <span className="gradient-heading">{t('process.title_accent')}</span></h2>
-<p className="text-gray-400 text-lg max-w-2xl mx-auto">{t('process.subtitle')}</p>
-</div>
-</div>
+      <div className="text-center mb-10 lg:mb-16">
+        <h2 className="font-display text-5xl lg:text-7xl font-bold text-white mb-4">El <span className="gradient-heading">{t('process.title_accent')}</span></h2>
+        <p className="text-gray-400 text-lg max-w-2xl mx-auto">{t('process.subtitle')}</p>
+      </div>
+
+      <div className="hidden md:flex items-center justify-center gap-4 mb-12">
+        {[0, 1, 2, 3].map((idx) => (
+          <div key={idx} className="flex items-center">
+            <button 
+              onClick={() => goToCard(idx)}
+              className={`w-12 h-12 rounded-2xl border-2 flex items-center justify-center font-display text-sm transition-all duration-500 ${activeCard === idx ? 'bg-violet-600 border-violet-500 text-white shadow-[0_0_20px_rgba(139,92,246,0.4)] scale-110' : 'border-white/5 text-gray-500 hover:border-white/20'}`}
+            >
+              0{idx + 1}
+            </button>
+            {idx < 3 && (
+              <div className="w-12 lg:w-20 h-[2px] bg-white/5 mx-2 relative overflow-hidden">
+                <motion.div 
+                  className="absolute inset-0 bg-linear-to-r from-violet-500 to-indigo-500"
+                  initial={{ x: '-100%' }}
+                  animate={{ x: activeCard > idx ? '0%' : '-100%' }}
+                  transition={{ duration: 0.6, ease: "easeInOut" }}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
 <div className="relative w-full overflow-hidden">
 <div
   className="protocol-scroll-container flex flex-nowrap gap-8 pb-2 px-4 sm:px-6 lg:px-8"
@@ -1878,6 +2001,8 @@ export default function App() {
     </div>
   </div>
 </section>
+    <FAQSection />
+
   <section id="contact" className="relative py-48 overflow-hidden">
     <div className="absolute inset-0 z-0">
       <div className="absolute inset-0 bg-black/60 z-10"></div>
@@ -1984,10 +2109,12 @@ export default function App() {
     </div>
   </section>
 
-  </>
-  } />
-  <Route path="/servicios" element={<Services />} />
-</Routes>
+            </>
+          </PageTransition>
+        } />
+        <Route path="/servicios" element={<PageTransition><Services /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
   
       {/* End main content wrapper */}
       </div>

@@ -92,12 +92,20 @@ const Services = () => {
 
                   <div className="flex-1 mb-8">
                     <ul className="space-y-4">
-                      {featuresList.map((feature, j) => (
-                        <li key={j} className="flex items-start gap-3">
-                          <span className="material-symbols-outlined text-violet-400 text-lg">check_circle</span>
-                          <span className="text-sm text-gray-300 font-light leading-snug">{feature}</span>
-                        </li>
-                      ))}
+                      {featuresList.map((feature, j) => {
+                        const isExcluded = feature.startsWith('-');
+                        const text = isExcluded ? feature.substring(1) : feature;
+                        return (
+                          <li key={j} className="flex items-start gap-3">
+                            <span className={`material-symbols-outlined text-lg shrink-0 ${isExcluded ? 'text-red-500 font-bold' : 'text-violet-400'}`}>
+                              {isExcluded ? 'close' : 'check_circle'}
+                            </span>
+                            <span className={`text-sm leading-snug font-medium ${isExcluded ? 'text-gray-500 line-through decoration-red-900/50' : 'text-gray-200'}`}>
+                              {text}
+                            </span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
 
