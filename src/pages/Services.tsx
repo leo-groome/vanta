@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import WaitlistModal from '../components/WaitlistModal';
 
 const Services = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -52,34 +55,55 @@ const Services = () => {
           </div>
         </section>
 
-        {/* CRM PLANS */}
         <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-32 z-20">
           <div className="text-center mb-16">
-            <h3 className="text-sm font-mono tracking-[0.3em] text-violet-400 mb-4">{t('crm_promo.plans_title')}</h3>
+            <h3 className="text-sm font-mono tracking-[0.3em] text-violet-400 mb-6">{t('crm_promo.plans_title')}</h3>
+            
+            <div className="inline-block relative mb-8 animate-fade-in-up">
+              <div className="absolute inset-0 bg-linear-to-r from-emerald-500/20 via-blue-500/20 to-violet-500/20 blur-xl rounded-full"></div>
+              <div className="relative px-6 py-3 border border-emerald-500/30 bg-emerald-950/40 rounded-full flex items-center gap-3 backdrop-blur-sm">
+                <span className="material-symbols-outlined text-emerald-400 text-xl">redeem</span>
+                <span className="text-sm md:text-base font-medium text-emerald-100 cursor-default">
+                  {t('crm_promo.discount_banner')}
+                </span>
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981] animate-pulse absolute -top-1 -right-1"></span>
+              </div>
+            </div>
+
             <div className="w-24 h-1 bg-linear-to-r from-transparent via-violet-500/50 to-transparent mx-auto opacity-50"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {['starter', 'standard', 'pro'].map((plan, i) => {
+            {['basic', 'standard', 'pro'].map((plan, i) => {
+              const isStandard = plan === 'standard';
+              const isPro = plan === 'pro';
+              
               const highlights = [
-                { border: 'border-white/10', bg: 'bg-white/2', btn: 'bg-white/5 hover:bg-white/10 border border-white/10 text-white' },
-                { border: 'border-violet-500/50', bg: 'bg-violet-900/20', btn: 'bg-violet-600 hover:bg-violet-500 text-white' },
-                { border: 'border-white/10', bg: 'bg-white/2', btn: 'bg-white/5 hover:bg-white/10 border border-white/10 text-white' }
+                { border: 'border-white/10 hover:border-white/20', bg: 'bg-white/2 bg-gradient-to-br from-white/5 to-transparent', btn: 'bg-white/5 hover:bg-white/10 border border-white/10 text-white' },
+                { border: 'border-violet-500/50 shadow-[0_0_40px_rgba(139,92,246,0.15)] ring-1 ring-violet-500/30 lg:scale-105 z-10', bg: 'bg-[#0b0514] bg-gradient-to-br from-violet-900/20 to-black', btn: 'bg-violet-600 hover:bg-violet-500 text-white shadow-[0_0_20px_rgba(139,92,246,0.4)] hover:shadow-[0_0_30px_rgba(139,92,246,0.6)] font-black' },
+                { border: 'border-white/10 hover:border-amber-500/30', bg: 'bg-white/2 bg-gradient-to-br from-amber-900/5 to-transparent', btn: 'bg-white/5 hover:bg-amber-500/20 border border-white/10 text-white' }
               ];
               
               const style = highlights[i];
               const featuresList = t(`crm_promo.plans.${plan}.features`, { returnObjects: true }) as string[];
+              const missList = t(`crm_promo.plans.${plan}.miss`, { returnObjects: true, defaultValue: [] }) as string[];
+              const includesText = t(`crm_promo.plans.${plan}.includes`, { defaultValue: '' }) as string;
+              const planTitle = t(`crm_promo.plans.${plan}.title`);
+              const originalPrice = t(`crm_promo.plans.${plan}.original_price`, { defaultValue: '' }) as string;
 
               return (
-                <div key={plan} className={`relative rounded-3xl border ${style.border} ${style.bg} p-8 flex flex-col transition-all duration-300 hover:border-violet-500/50 group`}>
-                  {i === 1 && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-violet-600 text-white text-[10px] font-bold tracking-widest uppercase rounded-full z-20">
+                <div key={plan} className={`relative rounded-3xl border ${style.border} ${style.bg} p-8 flex flex-col transition-all duration-300 group`}>
+                  {isStandard && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-violet-600 text-white text-[10px] font-bold tracking-widest uppercase rounded-full z-20 shadow-lg shadow-violet-500/20">
                       {t(`crm_promo.plans.${plan}.price_note`)}
                     </div>
                   )}
                   
                   <div className="mb-8 text-center">
-                    <h4 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-widest">{t(`crm_promo.plans.${plan}.title`)}</h4>
-                    <div className="flex items-baseline justify-center gap-1 mb-4">
+                    <h4 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-widest">{planTitle}</h4>
+                    <div className="flex items-baseline justify-center gap-1 mb-4 flex-wrap">
+                      {originalPrice && (
+                        <span className="text-xl text-gray-500/70 font-medium line-through mr-2">{originalPrice}</span>
+                      )}
                       <span className="text-4xl font-bold text-white">{t(`crm_promo.plans.${plan}.price`)}</span>
                       <span className="text-sm text-gray-500">{t(`crm_promo.plans.${plan}.price_suffix`)}</span>
                     </div>
@@ -88,32 +112,38 @@ const Services = () => {
                     </p>
                   </div>
 
-                  <div className="w-full h-px bg-white/5 mb-8"></div>
+                  <div className="w-full h-px bg-white/5 mb-6"></div>
 
                   <div className="flex-1 mb-8">
+                    {includesText && (
+                      <p className="text-xs font-bold text-gray-300 mb-5">{includesText}</p>
+                    )}
                     <ul className="space-y-4">
-                      {featuresList.map((feature, j) => {
-                        const isExcluded = feature.startsWith('-');
-                        const text = isExcluded ? feature.substring(1) : feature;
-                        return (
-                          <li key={j} className="flex items-start gap-3">
-                            <span className={`material-symbols-outlined text-lg shrink-0 ${isExcluded ? 'text-red-500 font-bold' : 'text-violet-400'}`}>
-                              {isExcluded ? 'close' : 'check_circle'}
-                            </span>
-                            <span className={`text-sm leading-snug font-medium ${isExcluded ? 'text-gray-500 line-through decoration-red-900/50' : 'text-gray-200'}`}>
-                              {text}
-                            </span>
-                          </li>
-                        );
-                      })}
+                      {featuresList.map((feature, j) => (
+                        <li key={j} className="flex items-start gap-3">
+                          <span className={`material-symbols-outlined ${isStandard ? 'text-violet-400' : isPro ? 'text-amber-400' : 'text-blue-400'} text-lg shrink-0`}>check_circle</span>
+                          <span className={`text-sm ${isStandard ? 'text-gray-200' : 'text-gray-300'} font-light leading-snug`}>{feature}</span>
+                        </li>
+                      ))}
+                      
+                      {missList.length > 0 && missList.map((miss, j) => (
+                        <li key={`miss-${j}`} className="flex items-start gap-3 opacity-40 group-hover:opacity-80 transition-opacity">
+                          <span className="material-symbols-outlined text-gray-500 text-lg shrink-0">cancel</span>
+                          <span className="text-sm text-gray-500 font-light leading-snug line-through">{miss}</span>
+                        </li>
+                      ))}
                     </ul>
                   </div>
 
-                  <a href={`https://wa.me/524494401613?text=Hola%2C%20me%20interesa%20el%20plan%20${t(`crm_promo.plans.${plan}.title`)}%20de%20VANTA%20CRM`} target="_blank" rel="noopener noreferrer" 
+                  <button 
+                     onClick={() => {
+                        setSelectedPlan(planTitle);
+                        setIsModalOpen(true);
+                     }} 
                      className={`w-full py-4 rounded-xl font-bold tracking-widest text-xs uppercase transition-all flex items-center justify-center gap-2 ${style.btn}`}>
                     {t(`crm_promo.plans.${plan}.cta`)}
                     <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                  </a>
+                  </button>
                 </div>
               );
             })}
@@ -507,6 +537,7 @@ const Services = () => {
         </section>
 
       </div>
+      <WaitlistModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} planName={selectedPlan} />
     </div>
   );
 };
