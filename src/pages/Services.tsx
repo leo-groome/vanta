@@ -8,6 +8,7 @@ const Services = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('');
+  const [selectedPlanId, setSelectedPlanId] = useState<'basic' | 'standard' | 'pro'>('basic');
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -138,6 +139,7 @@ const Services = () => {
                   <button 
                      onClick={() => {
                         setSelectedPlan(planTitle);
+                        setSelectedPlanId(plan as 'basic' | 'standard' | 'pro');
                         setIsModalOpen(true);
                      }} 
                      className={`w-full py-4 rounded-xl font-bold tracking-widest text-xs uppercase transition-all flex items-center justify-center gap-2 ${style.btn}`}>
@@ -537,7 +539,7 @@ const Services = () => {
         </section>
 
       </div>
-      <WaitlistModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} planName={selectedPlan} />
+      <WaitlistModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} planName={selectedPlan} planId={selectedPlanId} />
     </div>
   );
 };

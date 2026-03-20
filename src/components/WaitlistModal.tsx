@@ -5,14 +5,14 @@ interface WaitlistModalProps {
   isOpen: boolean;
   onClose: () => void;
   planName: string;
+  planId: 'basic' | 'standard' | 'pro';
 }
 
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mvzwzyrv';
-const SHEETS_WEBHOOK = 'https://script.google.com/macros/s/AKfycbzAjrczJVoIaI5VI8Jbe2SUwDZ5Uxy-5L9fkmQKLIeiQDSwAGGwP36YXBgBeuTy81dt/exec';
+const WAITLIST_API = 'https://waiting-lists-production.up.railway.app/api/v1/waiting-list/general';
 
-const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose, planName }) => {
-  const { t, i18n } = useTranslation();
-  const [form, setForm] = useState({ name: '', contact: '', website: '' });
+const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose, planName, planId }) => {
+  const { t } = useTranslation();
+  const [form, setForm] = useState({ name: '', email: '', lada: '+52', phone: '', website: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   if (!isOpen) return null;
@@ -24,35 +24,24 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose, planName
 
     const formData = {
       name: form.name,
-      contact: form.contact,
-      plan: planName,
-      lang: i18n.language,
-      _subject: `Waitlist Lead: ${form.name} - ${planName}`
+      email: form.email,
+      phone: `${form.lada} ${form.phone}`.trim(),
+      plan_type: planId
     };
 
     try {
-      const formspreePromise = fetch(FORMSPREE_ENDPOINT, {
+      const response = await fetch(WAITLIST_API, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(formData),
       });
 
-      const params = new URLSearchParams();
-      Object.entries(formData).forEach(([k, v]) => params.append(k, String(v)));
-      const sheetUrl = `${SHEETS_WEBHOOK}?${params.toString()}`;
-      
-      const img = new Image();
-      const sheetsPromise = new Promise((resolve) => {
-        img.onload = img.onerror = () => resolve(true);
-        img.src = sheetUrl;
-      });
-
-      const [response] = await Promise.all([formspreePromise, sheetsPromise]);
-
-      if ((response as Response).ok) {
+      if (response.ok) {
         setStatus('success');
-        setForm({ name: '', contact: '', website: '' });
+        setForm({ name: '', email: '', lada: '+52', phone: '', website: '' });
       } else {
+        const errData = await response.json();
+        console.error("Error validando API de waitlist:", errData);
         setStatus('error');
       }
     } catch (error) {
@@ -62,7 +51,15 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose, planName
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    let { name, value } = e.target;
+    if (name === 'lada') {
+      if (!value.startsWith('+')) {
+        value = '+' + value.replace(/\+/g, '');
+      }
+      // Only allow digits after the +
+      value = '+' + value.slice(1).replace(/\D/g, '');
+    }
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -124,16 +121,40 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose, planName
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold ml-1">{t('waitlist_modal.contact')}</label>
+                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold ml-1">{t('waitlist_modal.email')}</label>
                 <input 
-                  type="text" 
-                  name="contact" 
-                  value={form.contact} 
+                  type="email" 
+                  name="email" 
+                  value={form.email} 
                   onChange={handleChange} 
                   required 
                   className="w-full bg-[#111] border border-white/10 rounded-xl px-5 py-4 focus:outline-none focus:border-violet-500/50 text-white placeholder-gray-600 transition-colors"
-                  placeholder="juan@email.com o +52..."
+                  placeholder="juan@email.com"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold ml-1">{t('waitlist_modal.phone')}</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    name="lada" 
+                    value={form.lada} 
+                    onChange={handleChange} 
+                    required 
+                    className="w-24 bg-[#111] border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:border-violet-500/50 text-white placeholder-gray-600 transition-colors text-center"
+                    placeholder="+52"
+                  />
+                  <input 
+                    type="tel" 
+                    name="phone" 
+                    value={form.phone} 
+                    onChange={handleChange} 
+                    required 
+                    className="flex-1 bg-[#111] border border-white/10 rounded-xl px-5 py-4 focus:outline-none focus:border-violet-500/50 text-white placeholder-gray-600 transition-colors"
+                    placeholder="449 123 4567"
+                  />
+                </div>
               </div>
 
               {status === 'error' && (
