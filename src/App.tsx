@@ -585,7 +585,8 @@ export default function App() {
 <div className="hidden lg:block">
 <div className="ml-10 flex items-baseline space-x-8 xl:space-x-12">
 <Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/#manifesto">{t('nav.manifesto')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
-<Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/servicios">{t('nav.servicios')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
+        <Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/servicios/crm">{t('nav.servicios')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
+
 <Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/#pain-points">{t('nav.pain_points')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
 <Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/#command">{t('nav.command')}<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
 <Link className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base font-medium transition-colors relative group" to="/#projects">Proyectos<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span></Link>
@@ -631,7 +632,8 @@ export default function App() {
       </button>
 
       <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/#manifesto">{t('nav.manifesto')}</Link>
-      <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/servicios">{t('nav.servicios')}</Link>
+      <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/servicios/crm">{t('nav.servicios')}</Link>
+
       <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/#pain-points">{t('nav.pain_points')}</Link>
       <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/#command">{t('nav.command')}</Link>
       <Link onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-violet-400 transition-colors text-xl sm:text-2xl font-medium tracking-wide" to="/#projects">Proyectos</Link>
@@ -2112,7 +2114,8 @@ export default function App() {
             </>
           </PageTransition>
         } />
-        <Route path="/servicios" element={<PageTransition><Services /></PageTransition>} />
+        <Route path="/servicios/crm" element={<PageTransition><Services /></PageTransition>} />
+
       </Routes>
     </AnimatePresence>
   
