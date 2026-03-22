@@ -6,11 +6,12 @@ interface WaitlistModalProps {
   onClose: () => void;
   planName: string;
   planId: 'basic' | 'standard' | 'pro';
+  endpointUrl?: string;
 }
 
 const WAITLIST_API = 'https://waiting-lists-production.up.railway.app/api/v1/waiting-list/general';
 
-const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose, planName, planId }) => {
+const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose, planName, planId, endpointUrl = WAITLIST_API }) => {
   const { t } = useTranslation();
   const [form, setForm] = useState({ name: '', email: '', lada: '+52', phone: '', website: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -30,7 +31,7 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose, planName
     };
 
     try {
-      const response = await fetch(WAITLIST_API, {
+      const response = await fetch(endpointUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(formData),

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import WaitlistModal from '../components/WaitlistModal';
 
-const Services = () => {
+const Services = ({ isSpecialEvent = false }: { isSpecialEvent?: boolean }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,7 +65,7 @@ const Services = () => {
               <div className="relative px-6 py-3 border border-emerald-500/30 bg-emerald-950/40 rounded-full flex items-center gap-3 backdrop-blur-sm">
                 <span className="material-symbols-outlined text-emerald-400 text-xl">redeem</span>
                 <span className="text-sm md:text-base font-medium text-emerald-100 cursor-default">
-                  {t('crm_promo.discount_banner')}
+                  {isSpecialEvent ? '¡Oferta única para asistentes al evento! Doblemente rebajado.' : t('crm_promo.discount_banner')}
                 </span>
                 <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981] animate-pulse absolute -top-1 -right-1"></span>
               </div>
@@ -90,12 +90,16 @@ const Services = () => {
               const includesText = t(`crm_promo.plans.${plan}.includes`, { defaultValue: '' }) as string;
               const planTitle = t(`crm_promo.plans.${plan}.title`);
               const originalPrice = t(`crm_promo.plans.${plan}.original_price`, { defaultValue: '' }) as string;
+              
+              const displayPrice = isSpecialEvent 
+                ? (plan === 'basic' ? '99' : plan === 'standard' ? '299' : '999')
+                : t(`crm_promo.plans.${plan}.price`);
 
               return (
                 <div key={plan} className={`relative rounded-3xl border ${style.border} ${style.bg} p-8 flex flex-col transition-all duration-300 group`}>
                   {isStandard && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-violet-600 text-white text-[10px] font-bold tracking-widest uppercase rounded-full z-20 shadow-lg shadow-violet-500/20">
-                      {t(`crm_promo.plans.${plan}.price_note`)}
+                      {isSpecialEvent ? 'MÁS POPULAR' : t(`crm_promo.plans.${plan}.price_note`)}
                     </div>
                   )}
                   
@@ -103,9 +107,16 @@ const Services = () => {
                     <h4 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-widest">{planTitle}</h4>
                     <div className="flex items-baseline justify-center gap-1 mb-4 flex-wrap">
                       {originalPrice && (
-                        <span className="text-xl text-gray-500/70 font-medium line-through mr-2">{originalPrice}</span>
+                        <span className={`text-xl font-medium line-through mr-1 ${isSpecialEvent ? 'text-gray-600/50' : 'text-gray-500/70 mr-2'}`}>
+                          {originalPrice}
+                        </span>
                       )}
-                      <span className="text-4xl font-bold text-white">{t(`crm_promo.plans.${plan}.price`)}</span>
+                      {isSpecialEvent && (
+                        <span className="text-xl text-emerald-500/70 font-medium line-through mr-2">
+                          {t(`crm_promo.plans.${plan}.price`)}
+                        </span>
+                      )}
+                      <span className="text-4xl font-bold text-white">{displayPrice}</span>
                       <span className="text-sm text-gray-500">{t(`crm_promo.plans.${plan}.price_suffix`)}</span>
                     </div>
                     <p className="text-sm text-gray-400 font-light max-w-xs mx-auto leading-relaxed px-2">
@@ -539,7 +550,13 @@ const Services = () => {
         </section>
 
       </div>
-      <WaitlistModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} planName={selectedPlan} planId={selectedPlanId} />
+      <WaitlistModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        planName={selectedPlan} 
+        planId={selectedPlanId} 
+        endpointUrl={isSpecialEvent ? 'https://waiting-lists-production.up.railway.app/api/v1/waiting-list/exclusive' : undefined}
+      />
     </div>
   );
 };

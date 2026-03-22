@@ -2115,6 +2115,7 @@ export default function App() {
           </PageTransition>
         } />
         <Route path="/servicios/crm" element={<PageTransition><Services /></PageTransition>} />
+        <Route path="/servicios/crm/8943712" element={<PageTransition><Services isSpecialEvent={true} /></PageTransition>} />
 
       </Routes>
     </AnimatePresence>
