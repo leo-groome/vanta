@@ -4,7 +4,7 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import Services from './pages/Services';
-import logo from './assets/logo-vanta-Fondo.png';
+import logo from './assets/logo.svg';
 
 const Typewriter = ({ text, delay = 0, speed = 30, className = "", onComplete, startTrigger = true }: { text: string, delay?: number, speed?: number, className?: string, onComplete?: () => void, startTrigger?: boolean }) => {
   const [displayedText, setDisplayedText] = useState("");

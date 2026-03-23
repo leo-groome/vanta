@@ -360,6 +360,18 @@
     "linkedin": "LinkedIn",
     "github": "GitHub"
   },
+  "faq": {
+    "title": "FREQUENTLY ASKED QUESTIONS",
+    "subtitle": "Operational Information",
+    "q1": "What is the average implementation time?",
+    "a1": "Our engineering methodology allows for rapid initial deployments, generally between 4 to 12 weeks depending on the complexity and architecture of the required technological solution.",
+    "q2": "Do you work with legacy systems?",
+    "a2": "Yes. We perform an initial diagnostic to identify if secure data integration is possible or if we recommend a deep migration toward a modern microservices-based architecture.",
+    "q3": "Are you a traditional web development agency?",
+    "a3": "Not at all. Vanta Solutions is an engineering firm focused on the operational core of commercial enterprises. The visual design is solely the frontend of a structurally robust system.",
+    "q4": "What happens with source code ownership?",
+    "a4": "Absolute transparency. Once the solution is implemented and settled, the infrastructure, databases, and core code become the full intellectual property of your company."
+  },
   "form": {
     "title": "Direct Contact",
     "name": "Full Name",

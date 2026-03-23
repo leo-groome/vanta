@@ -360,6 +360,18 @@
     "linkedin": "LinkedIn",
     "github": "GitHub"
   },
+  "faq": {
+    "title": "PREGUNTAS FRECUENTES",
+    "subtitle": "Información Operativa",
+    "q1": "¿Cuál es el tiempo promedio de implementación?",
+    "a1": "Nuestra metodología de ingeniería permite despliegues iniciales rápidos, generalmente entre 4 a 12 semanas dependiendo de la complejidad y arquitectura de la solución tecnológica requerida.",
+    "q2": "¿Trabajan con sistemas previos o legacy?",
+    "a2": "Sí. Realizamos un diagnóstico inicial para identificar si es posible la integración segura de los datos o si recomendamos una migración profunda hacia una arquitectura basada en microservicios actuales.",
+    "q3": "¿Son una agencia de desarrollo web tradicional?",
+    "a3": "En absoluto. Vanta Solutions es una firma de ingeniería focalizada en el núcleo operativo de las empresas comerciales. El diseño visual es únicamente el frontend de un sistema estructuralmente robusto.",
+    "q4": "¿Qué pasa con la propiedad del código fuente?",
+    "a4": "Absoluta transparencia. Una vez implementada y liquidada la solución, la infraestructura, bases de datos y el código core pasan a ser propiedad intelectual total de tu compañía."
+  },
   "form": {
     "title": "Contacto Directo",
     "name": "Nombre Completo",
