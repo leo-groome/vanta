@@ -2097,9 +2097,19 @@ export default function App() {
       </div>
 
       <div className="pt-16 border-t border-white/10 grid grid-cols-1 md:grid-cols-3 gap-8 text-gray-500 text-[10px] font-mono uppercase tracking-[0.3em]">
-        <div className="text-center md:text-left space-y-2">
-          <p>{t('comparison.vanta')} | {t('cta_bottom.location')}</p>
-          <p className="opacity-60">{t('cta_bottom.copy')}</p>
+        <div className="text-center md:text-left space-y-4">
+          <p className="text-white/80 font-black tracking-[0.3em]">{t('cta_bottom.name_official')}</p>
+          <div className="flex flex-col gap-2">
+            <p className="flex items-center gap-2 justify-center md:justify-start">
+              <span className="material-symbols-outlined text-[12px] opacity-50">pin_drop</span>
+              {t('cta_bottom.address')}
+            </p>
+            <p className="flex items-center gap-2 justify-center md:justify-start">
+              <span className="material-symbols-outlined text-[12px] opacity-50">call</span>
+              {t('cta_bottom.phone')}
+            </p>
+          </div>
+          <p className="opacity-30 pt-4">{t('cta_bottom.copy')}</p>
         </div>
         <div className="flex justify-center gap-8">
           <a className="hover:text-violet-400 transition-colors" href="#">{t('cta_bottom.privacy')}</a>

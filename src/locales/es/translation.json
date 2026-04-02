@@ -359,7 +359,9 @@
     "contact": "Contacto",
     "linkedin": "LinkedIn",
     "github": "GitHub",
-    "location": "Aguascalientes, México"
+    "address": "Aguascalientes, México",
+    "phone": "+52 449 440 1613",
+    "name_official": "Vanta Solutions"
   },
   "faq": {
     "title": "PREGUNTAS FRECUENTES",
