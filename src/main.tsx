@@ -8,7 +8,7 @@ import { BrowserRouter } from 'react-router-dom'
 import posthog from 'posthog-js'
 import { PostHogProvider } from 'posthog-js/react'
 
-posthog.init('phc_sdZv8T9Q2Bv6CsktmA5XELsWkwvKbhnyeHF75zwcBfKe', {
+posthog.init('phc_sdZv8T9Q2Bv6CsktmA5XELsWkWvKbhnyeHF75zwcBfKe', {
   api_host: 'https://us.i.posthog.com',
   person_profiles: 'identified_only',
 })
